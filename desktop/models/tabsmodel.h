@@ -13,6 +13,7 @@ public:
                  ForwardNavigatingRole,
                  IsLoadingRole};
     explicit TabsModel(QObject *parent = nullptr);
+
     int rowCount(const QModelIndex &parent = QModelIndex()) const override
     {
         return _tabs.size();
@@ -33,6 +34,7 @@ public:
     }
 
     int getTabIndex(TabId id);
+    TabInfo getTabInfo(TabId id);
 private:
 
     std::vector<TabInfo> _tabs;

@@ -27,12 +27,17 @@ set(PROJECT_SOURCES
         adapter/CoreAdapter.cpp
 
         controllers/MainWindowController.h
+        controllers/MainWindowController.cpp
         controllers/TabsController.h
+        controllers/TabsController.cpp
         controllers/HistoryController.h
         controllers/BookmarksController.h
 
         models/tabsmodel.h
         models/tabsmodel.cpp
+
+        binder/AppBinder.h
+
         ${TS_FILES}
 )
 
@@ -40,7 +45,11 @@ if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
     qt_add_executable(desktop
         MANUAL_FINALIZATION
         ${PROJECT_SOURCES}
+
+        resources.qrc
     )
+
+
 
 qt_add_resources(desktop "resources.qrc")
 # Define target properties for Android with Qt 6 as:
@@ -65,13 +74,15 @@ else()
     qt5_create_translation(QM_FILES ${CMAKE_SOURCE_DIR} ${TS_FILES})
 endif()
 
-add_subdirectory(core)
+add_subdirectory(../core core_build)
 target_link_libraries(desktop PRIVATE
     Qt${QT_VERSION_MAJOR}::Widgets
     Qt${QT_VERSION_MAJOR}::WebEngineWidgets
     browser_core
     )
-
+target_include_directories(desktop PRIVATE
+    ${CMAKE_SOURCE_DIR}
+)
 # Qt for iOS sets MACOSX_BUNDLE_GUI_IDENTIFIER automatically since Qt 6.1.
 # If you are developing for iOS or macOS you should consider setting an
 # explicit, fixed bundle identifier manually though.

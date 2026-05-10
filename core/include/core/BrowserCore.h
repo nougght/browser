@@ -100,7 +100,7 @@ public:
     Event<TabInfo> tabCreated;
 
     // переходы в рамках одной вкладки
-    Event<NavigationCompletedArgs> navigationCompleted;
+    Event<NavigationRequestedArgs> navigationRequested;
 
     Event<TabTitleChangedArgs> titleChanged;
 

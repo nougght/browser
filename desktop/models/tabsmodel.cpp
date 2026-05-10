@@ -98,3 +98,12 @@ void TabsModel::setInitialTabs(std::vector<TabInfo> tabs)
     _tabs = std::move(tabs);
     endResetModel();
 }
+
+
+TabInfo TabsModel::getTabInfo(TabId id)
+{
+    int ind = getTabIndex(id);
+    if (ind == -1)
+        throw std::runtime_error("Tab with id " + std::to_string(id.value) + " not found");
+    return _tabs[ind];
+}
