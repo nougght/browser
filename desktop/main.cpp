@@ -1,4 +1,6 @@
-#include "mainwindow.h"
+#include "ui/mainwindow.h"
+#include "binder/AppBinder.h"
+#include "controllers/MainWindowController.h"
 
 #include <QApplication>
 #include <QLocale>
@@ -23,17 +25,29 @@ int main(int argc, char *argv[])
             break;
         }
     }
-    MainWindow w;
-    QFile style(":/style/style.css");
+    
+    auto core = std::make_unique<BrowserCore>();
+    auto coreAdapter = std::make_unique<CoreAdapter>(core.get());
+    auto tabsModel = new TabsModel();
+    auto mainWindow = new MainWindow(tabsModel);
+    auto mainController = std::make_unique<MainWindowController>(coreAdapter.get());
+    auto tabsController = std::make_unique<TabsController>(coreAdapter.get(), tabsModel);
+
+    // bind controller and view signals
+    AppBinder binder(mainWindow, mainController.get(), tabsController.get());
+    
+
+    QFile style(":/style/ui/style.css");
     if (style.open(QFile::ReadOnly)){
 
-        w.setStyleSheet(style.readAll());
+        mainWindow->setStyleSheet(style.readAll());
     }
     else {
         qDebug() << "\nCan't open style file";
     }
 
-    w.show();
+    coreAdapter->loadTabs();
+    mainWindow->show();
 
     return a.exec();
 }

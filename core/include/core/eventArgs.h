@@ -9,7 +9,7 @@
 
 
 
-struct NavigationCompletedArgs
+struct NavigationRequestedArgs
 {
     NavigationType type;
     TabInfo tabInfo;

@@ -77,7 +77,7 @@ void TabManager::changeActiveTab(TabId id)
 
 void TabManager::reloadTab(TabId id)
 {
-    navigationCompleted.invoke(NavigationCompletedArgs{NavigationType::Reload, getTab(id)->toTabInfo()});
+    navigationRequested.invoke(NavigationRequestedArgs{NavigationType::Reload, getTab(id)->toTabInfo()});
 }
 
 
@@ -139,7 +139,7 @@ void TabManager::goBack(TabId id)
     if (existing != _tabs.end())
     {
         existing->second->goBack();
-        navigationCompleted.invoke(NavigationCompletedArgs{NavigationType::Back, getTab(id)->toTabInfo()});
+        navigationRequested.invoke(NavigationRequestedArgs{NavigationType::Back, getTab(id)->toTabInfo()});
     }
 
 }
@@ -150,7 +150,7 @@ void TabManager::goForward(TabId id)
     if (existing != _tabs.end())
     {
         existing->second->goForward();
-        navigationCompleted.invoke(NavigationCompletedArgs{NavigationType::Forward, getTab(id)->toTabInfo()});
+        navigationRequested.invoke(NavigationRequestedArgs{NavigationType::Forward, getTab(id)->toTabInfo()});
     }
 }
 

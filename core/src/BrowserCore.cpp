@@ -26,9 +26,9 @@ BrowserCore::BrowserCore() :  _tabManager(std::make_unique<TabManager>()), _even
                   tabClosed.invoke(id); })));
 
 
-          _subs.push_back(std::make_unique<Subscription<NavigationCompletedArgs>>(_tabManager->navigationCompleted.subscribe(
-              [this] (NavigationCompletedArgs args) {
-                  navigationCompleted.invoke(args);
+          _subs.push_back(std::make_unique<Subscription<NavigationRequestedArgs>>(_tabManager->navigationRequested.subscribe(
+              [this] (NavigationRequestedArgs args) {
+                  navigationRequested.invoke(args);
               })));
 
 
@@ -151,7 +151,7 @@ void BrowserCore::visitUrl(TabId id, Url url)
               if (!id.isValid())
                   return;
               _tabManager->visitUrl(id, url);
-              navigationCompleted.invoke(NavigationCompletedArgs{
+              navigationRequested.invoke(NavigationRequestedArgs{
                                                                  NavigationType::NewPage,
                                                                  _tabManager->getTab(id)->toTabInfo()});
               // urlVisited.invoke(UrlVisitedArgs{id, url});
@@ -165,7 +165,7 @@ void BrowserCore::changeTabUrl(TabId id, Url url)
               if (!id.isValid())
                   return;
               _tabManager->changeTabUrl(id, url);
-              navigationCompleted.invoke(NavigationCompletedArgs{
+              navigationRequested.invoke(NavigationRequestedArgs{
                                                                  NavigationType::Redirect,
                                                                  _tabManager->getTab(id)->toTabInfo()});
           });

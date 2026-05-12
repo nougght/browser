@@ -15,4 +15,11 @@ struct TabInfo {
     bool canGoForward;
     bool isLoading;
 };
+
+struct HistoryEntry {
+    std::string url;
+    std::string title;
+    int64_t timestamp;
+};
+
 #endif

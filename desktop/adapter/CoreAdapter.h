@@ -11,23 +11,30 @@
 #include <QObject>
 #include <QUrl>
 
-
+// QT wrapper for core (converts core events to Qt signals)
 class CoreAdapter: public QObject
 {
     Q_OBJECT
 
 public:
-    CoreAdapter(BrowserCore & core) : _core(core)
+    CoreAdapter(BrowserCore *core) : _core(core)
     {
-        _setupEvents();   
+        _setupEvents();
+    }
+    QUrl static convert(Url url)
+    {
+        return QUrl(QString::fromStdString(url.toStdString()));
+    }
+    Url static convert(QUrl url)
+    {
+        return Url(url.toString().toStdString());
     }
 
-    
 signals:
     void tabsLoaded(std::vector<TabInfo> tabs);
     void tabCreated(TabInfo tab);
     void activeTabChanged(TabId id);
-    void navigationCompleted(NavigationCompletedArgs args);
+    void navigationRequested(NavigationRequestedArgs args);
     void titleChanged(TabTitleChangedArgs args);
     void loadingStatusChanged(TabLoadingStatusChangedArgs args);
     void loadingProgressChanged(TabLoadingProgressChangedArgs args);
@@ -51,15 +58,7 @@ public slots:
 
 private:
     void _setupEvents();
-    QUrl convert(Url url)
-    {
-        return QUrl(QString::fromStdString(url.toStdString()));
-    }
-    Url convert(QUrl url)
-    {
-        return Url(url.toString().toStdString());
-    }
     std::vector<std::unique_ptr<ISubscription>> _subscriptions;
-    BrowserCore &_core;
+    BrowserCore *_core;
 };
 #endif

@@ -46,7 +46,7 @@ public:
     // Event<bool> canGoForwardChanged;
     // Event<TabInfo> wentBack;
     // Event<TabInfo> wentForward;
-    Event<NavigationCompletedArgs> navigationCompleted;
+    Event<NavigationRequestedArgs> NavigationRequested;
     // Event<
     Event<Url> urlVisited;
     Event<Url> urlChanged;
