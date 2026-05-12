@@ -27,10 +27,6 @@ void TabBarWithControl::setupUI()
     _tabsList->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
     connect(_tabsList, &QListView::clicked, this, &TabBarWithControl::onTabClicked);
 
-    // for (int i = 0; i < 6; ++i)
-    // {
-    //     model->addTab("вкладка " + QString::number(i));
-    // }
     _tabsList->setModel(_tabsModel);
     _tabsList->setItemAlignment(Qt::AlignmentFlag::AlignCenter);
     _tabsList->setFlow(QListView::Flow::LeftToRight);
@@ -80,34 +76,6 @@ void TabBarWithControl::setupUI()
 
 void TabBarWithControl::onTabClicked(const QModelIndex &index)
 {
-    // TabId id = _tabsModel->getTabIdByIndex(index.row());
     emit tabClicked(index.row());
 }
 
-// void TabBarWithControl::addTab(const TabInfo &tab)
-// {
-//     _tabsModel->addTab(tab);
-// }
-
-// void TabBarWithControl::updateTabTitle(TabId id, std::string title)
-// {
-//     _tabsModel->updateTabTitle(id, title);
-// }
-
-// void TabBarWithControl::updateTabUrl(TabId id, Url url)
-// {
-//     _tabsModel->updateTabUrl(id, url);
-// }
-// void TabBarWithControl::updateTabLoading(TabId id, bool isLoading)
-// {
-//     _tabsModel->updateTabLoading(id, isLoading);
-// }
-// void TabBarWithControl::updateTabNavigation(TabId id, bool canGoBack, bool canGoForward)
-// {
-//     _tabsModel->updateTabNavigation(id, canGoBack, canGoForward);
-// }
-
-// void TabBarWithControl::setInitialTabs(std::vector<TabInfo> tabs)
-// {
-//     _tabsModel->setInitialTabs(tabs);
-// }

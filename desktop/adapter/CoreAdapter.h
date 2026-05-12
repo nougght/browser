@@ -11,7 +11,7 @@
 #include <QObject>
 #include <QUrl>
 
-
+// QT wrapper for core (converts core events to Qt signals)
 class CoreAdapter: public QObject
 {
     Q_OBJECT

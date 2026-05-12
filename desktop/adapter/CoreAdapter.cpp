@@ -1,7 +1,7 @@
 #include "CoreAdapter.h"
 #include <memory>
 
-
+// subscribing to core events and emit qt signals
 void CoreAdapter::_setupEvents()
 {
     _subscriptions.push_back(std::make_unique<Subscription<std::vector<TabInfo>>>(

@@ -49,14 +49,6 @@ signals:
     void loadProgress(TabId id, int progress);
 
 public slots:
-    // void onTabsLoaded(std::vector<TabInfo>);
-    // void onTabCreated(TabInfo tabInfo);
-    // void onNavigationCompleted(NavigationCompletedArgs args);
-    // void onSearchEditingFinished();
-    // void onEngineUrlChanged(TabId id, QUrl newUrl);
-    // void onEngineTitleChanged(TabId id, QString newTitle);
-    // void onLoadingStatusChanged(TabId id, bool isLoading);
-    // void onLoadingProgressChanged(TabId id, int progress);
 
     void addTabs(std::vector<TabInfo> tabs);
     void addTab(TabInfo tabInfo);
@@ -74,16 +66,12 @@ public slots:
     void navigateForward(TabInfo tabInfo);
     void visitUrl(TabInfo tab);
 
-    // void onTabsModelDataChanged(const QModelIndex &topLeft,
-    //                             const QModelIndex &bottomRight,
-    //                             const QList<int> &roles = QList<int>());
 
 private:
     void setupUI(QAbstractListModel *tabsModel);
     void setupEvents();
     void setupTabViewEvents(TabId tabId, QWebEngineView *tabView);
 
-    // TabsModel *_tabsModel;
 
     QWidget *_centralWidget;
     QVBoxLayout *_centralLayout;
@@ -97,8 +85,6 @@ private:
     QWidget *_prgsBarPlaceholder;
     QStackedWidget *_stackedWidget;
 
-    // std::unique_ptr<BrowserCore> _core;
-    // TabId _activeTabId;
     std::map<TabId, QWebEngineView *> _tabWidgets;
 };
 #endif // MAINWINDOW_H

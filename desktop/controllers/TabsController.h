@@ -29,7 +29,7 @@ public:
                                 const QList<int> &roles = QList<int>());
 
 
-
+    // slots for ui signals
     void onSearchRequested(QString searchQuery);
     void onEngineUrlChanged(TabId id, QUrl newUrl);
     void onEngineTitleChanged(TabId id, QString newTitle);
@@ -60,17 +60,6 @@ signals:
 
 
 private:
-    // void onSearchEditingClicked();
-    // void onEngineUrlChanged(TabId id, QUrl newUrl);
-    // void onEngineTitleChanged(TabId id, QString newTitle);
-
-    // void onTabsLoaded(std::vector<TabInfo>);
-    // void onTabCreated(TabInfo tabInfo);
-    // void onNavigationRequested(NavigationRequestedArgs args);
-    // void onLoadingStatusChanged(TabId id, bool isLoading);
-    // void onLoadingProgressChanged(TabId id, int progress);
-
-    // void onActiveTabChanged(TabId id);
 
     void _setupEvents();
 

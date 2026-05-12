@@ -8,19 +8,6 @@ TabsController::TabsController(CoreAdapter *coreAdapter, TabsModel *tabsModel)
 
 void TabsController::_setupEvents()
 {
-    // connect(_mainWindow, &MainWindow::newTabClicked, this, &TabsController::onNewTabClicked);
-    // connect(_mainWindow, &MainWindow::tabClicked, this, &TabsController::onTabClicked);
-    // connect(_mainWindow, &MainWindow::reloadClicked, this, &TabsController::onReloadClicked);
-    // connect(_mainWindow, &MainWindow::backClicked, this, &TabsController::onBackClicked);
-    // connect(_mainWindow, &MainWindow::forwardClicked, this, &TabsController::onForwardClicked);
-    // connect(_mainWindow, &MainWindow::searchClicked, this, &TabsController::onSearchEditingClicked);
-    // connect(_mainWindow, &MainWindow::engineUrlChanged, this, &TabsController::onEngineUrlChanged);
-    // connect(_mainWindow, &MainWindow::engineTitleChanged, this, &TabsController::onEngineTitleChanged);
-    // connect(_mainWindow, &MainWindow::loadStarted, this, [this] (TabId id){_core->setTabLoadingStatus(id, true);});
-    // connect(_mainWindow, &MainWindow::loadFinished, this, [this] (TabId id){_core->setTabLoadingStatus(id, false);});
-    // connect(_mainWindow, &MainWindow::loadProgress, this, [this] (TabId id, int progress){_core->changeTabLoadingProgress(id, progress);});
-
-    // connect(mainWindow, &MainWindow::newTabClicked, this, &TabsController::onNewTabClicked);
 
     connect(_coreAdapter, &CoreAdapter::tabsLoaded, this, &TabsController::onTabsLoaded);
     connect(_coreAdapter, &CoreAdapter::tabCreated, this, &TabsController::onTabCreated);

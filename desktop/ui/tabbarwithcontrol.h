@@ -8,19 +8,13 @@
 #include <QStyledItemDelegate>
 #include "../models/tabsmodel.h"
 
+// tabbar with control (-,x) buttons
 class TabBarWithControl : public QFrame
 {
     Q_OBJECT
 public:
     TabBarWithControl(QWidget *parent, QAbstractListModel *model);
     void setupUI();
-    // void addTab(const TabInfo &tab);
-    // void updateTabTitle(TabId id, std::string title);
-    // void updateTabUrl(TabId id, Url url);
-    // void updateTabLoading(TabId id, bool isLoading);
-    // void updateTabNavigation(TabId id, bool canGoBack, bool canGoForward);
-
-    // void setInitialTabs(std::vector<TabInfo> tabs);
 
 
 signals:

@@ -2,6 +2,7 @@
 #include "controllers/TabsController.h"
 #include "ui/mainwindow.h"
 
+// binds controller and ui signals
 class AppBinder
 {
 public:
