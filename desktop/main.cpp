@@ -26,7 +26,7 @@ int main(int argc, char *argv[])
         }
     }
     
-    auto core = std::make_unique<BrowserCore>();
+    std::unique_ptr<IBrowserCore> core(CreateBrowserCore());
     auto coreAdapter = std::make_unique<CoreAdapter>(core.get());
     auto tabsModel = new TabsModel();
     auto mainWindow = new MainWindow(tabsModel);

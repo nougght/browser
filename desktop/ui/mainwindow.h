@@ -14,7 +14,6 @@
 #include "tabbarwithcontrol.h"
 #include "../models/tabsmodel.h"
 
-#include "core/BrowserCore.h"
 #include "core/Url.h"
 #include "core/Identifier.h"
 #include "core/Event.h"

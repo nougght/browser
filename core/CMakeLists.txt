@@ -1,18 +1,24 @@
 
 set(CORE_SOURCES
-    include/core/BrowserCore.h
-    include/core/Url.h
     include/core/types.h
     include/core/models.h
     include/core/eventArgs.h
-    include/core/Event.h
+    include/core/Url.h
     include/core/Identifier.h
-    include/core/Tab.h
-    include/core/TabHistory.h
+    include/core/Event.h
+    include/core/interfaces/IBrowserCore.h
     include/core/interfaces/ICoreDispatcher.h
 
+    src/BrowserCore.h
     src/BrowserCore.cpp
-    src/common/Url.cpp
+    src/domain/Url.cpp
+    src/domain/Tab.h
+
+    src/domain/TabHistory.h
+    src/storage/DatabaseManager.h
+    src/storage/DatabaseManager.cpp
+    src/storage/repositories/HistoryRepository.h
+    src/storage/repositories/HistoryRepository.cpp
     src/services/tabs/TabManager.cpp
     src/services/tabs/TabManager.h
     src/services/tabs/Tab.cpp
@@ -21,6 +27,8 @@ set(CORE_SOURCES
     src/services/tabs/TabIdGenerator.h
     src/services/history/HistoryService.h
     src/services/history/HistoryService.cpp
+
+
 )
 find_package(unofficial-sqlite3 CONFIG REQUIRED)
 

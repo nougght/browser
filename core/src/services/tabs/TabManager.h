@@ -2,7 +2,7 @@
 #define TAB_MANAGER_H
 
 // #include <core/Identifier.h>
-#include <core/Tab.h>
+#include "domain/Tab.h"
 #include "TabIdGenerator.h"
 #include <unordered_map>
 #include <vector>

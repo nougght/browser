@@ -3,11 +3,11 @@
 
 // #include "TabId.h"
 
+#include <core/Url.h>
+#include <core/Event.h>
+#include <core/eventArgs.h>
 #include "TabHistory.h"
-#include "Url.h"
-#include "Identifier.h"
-#include "Event.h"
-#include "eventArgs.h"
+#include "core/Identifier.h"
 
 
 

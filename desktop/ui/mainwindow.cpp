@@ -1,6 +1,5 @@
 #include "mainwindow.h"
 #include <QVBoxLayout>
-#include <core/BrowserCore.h>
 #include <core/models.h>
 #include <core/types.h>
 #include <core/eventArgs.h>
