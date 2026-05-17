@@ -22,9 +22,22 @@ set(CORE_SOURCES
     src/services/history/HistoryService.h
     src/services/history/HistoryService.cpp
 )
+find_package(unofficial-sqlite3 CONFIG REQUIRED)
 
 add_library(browser_core STATIC
     ${CORE_SOURCES}
+    src/storage/sql/init.sql
+
+)
+
+add_custom_command(TARGET browser_core POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/storage/sql/init.sql
+    $<TARGET_FILE_DIR:browser_core>
+)
+
+target_link_libraries(browser_core PRIVATE
+    unofficial::sqlite3::sqlite3
 )
 
 target_include_directories(browser_core 
