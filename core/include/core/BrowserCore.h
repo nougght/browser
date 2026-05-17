@@ -15,20 +15,19 @@
 #include "Tab.h"
 #include "Event.h"
 #include "Url.h"
+#include "core/interfaces/ICoreDispatcher.h"
 
 class HistoryService;
 class TabManager;
 
 // ядро браузера с встроенным циклом событий(event loop)
-class BrowserCore
+class BrowserCore : public ICoreDispatcher
 {
 private:
 
     // запуск event loop
     void _run();
 
-    // добавить событие в очередь обработки
-    void _post(std::function<void()> task);
 
     // отключение event loop
     void _shutdownEventLoop();
@@ -61,6 +60,8 @@ public:
     ~BrowserCore();
 
 
+    // добавить событие в очередь обработки
+    void post(std::function<void()> task) override;
     
     void loadTabs();
     void createTab(Url url);

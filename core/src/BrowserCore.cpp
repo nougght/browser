@@ -2,13 +2,30 @@
 #include "services/tabs/TabManager.h"
 
 
-BrowserCore::BrowserCore() :  _tabManager(std::make_unique<TabManager>()), _eventLoopWorker([this] {_run(); })
-{
-    _post([this]
-    {
-          _subs.push_back(std::make_unique<Subscription<TabInfo>>(_tabManager->tabCreated.subscribe([this](TabInfo tabInfo)
-                {
-                    this->tabCreated.invoke(tabInfo);
+BrowserCore::BrowserCore()
+    : _tabManager(std::make_unique<TabManager>()),
+    _eventLoopWorker([this] { _run(); }) {
+    post([this] {
+        _subs.push_back(std::make_unique<Subscription<TabInfo>>(
+            _tabManager->tabCreated.subscribe(
+                [this](TabInfo tabInfo) { this->tabCreated.invoke(tabInfo); })));
+
+        _subs.push_back(std::make_unique<Subscription<std::vector<TabInfo>>>(
+            _tabManager->tabsLoaded.subscribe(
+                [this](std::vector<TabInfo> tabs) { tabsLoaded.invoke(tabs); })));
+
+        _subs.push_back(std::make_unique<Subscription<TabId>>(
+            _tabManager->activeTabChanged.subscribe(
+                [this](TabId id) { activeTabChanged.invoke(id); })));
+
+        _subs.push_back(
+            std::make_unique<Subscription<TabId>>(_tabManager->tabClosed.subscribe(
+                [this](TabId id) { tabClosed.invoke(id); })));
+
+        _subs.push_back(std::make_unique<Subscription<NavigationRequestedArgs>>(
+            _tabManager->navigationRequested.subscribe(
+                [this](NavigationRequestedArgs args) {
+                    navigationRequested.invoke(args);
                 })));
 
           _subs.push_back(std::make_unique<Subscription<std::vector<TabInfo>>>(_tabManager->tabsLoaded.subscribe(
@@ -88,8 +105,7 @@ void BrowserCore::_run()
     }
 }
 
-void BrowserCore::_post(std::function<void()> task)
-{
+void BrowserCore::post(std::function<void()> task) {
     {
         // блокировка для доступа к очереди
         std::lock_guard<std::mutex> lock(_mutex);
@@ -105,149 +121,122 @@ void BrowserCore::_post(std::function<void()> task)
 //     return _tabManager.get();
 // }
 
-void BrowserCore::loadTabs()
-{
-    _post([this]{
-        _tabManager->loadTabs();
-    });
+void BrowserCore::loadTabs() {
+    post([this] { _tabManager->loadTabs(); });
 
-    // _post([this]()
+    // post([this]()
     //       { tabsLoaded.invoke(_tabManager->getTabInfos()); });
 }
 
-void BrowserCore::createTab(Url url)
-{
-    _post([this, url = std::move(url)]
-          {
+void BrowserCore::createTab(Url url) {
+    post([this, url = std::move(url)] {
               TabId id = _tabManager->createTab(url);
               // TabInfo tabInfo = _tabManager->getTab(id)->toTabInfo();
               // tabCreated.invoke(tabInfo);
-              // navigationCompleted.invoke(NavigationCompletedArgs{NavigationType::NewPage, tabInfo});
+        // navigationCompleted.invoke(NavigationCompletedArgs{NavigationType::NewPage,
+        // tabInfo});
           });
 }
 
-void BrowserCore::createTab()
-{
-    _post([this]
-          {
-        _tabManager->createTab();
-    });
+void BrowserCore::createTab() {
+    post([this] { _tabManager->createTab(); });
 }
 
-void BrowserCore::closeTab(TabId id)
-{
-    _post([this, id]
-          {
-              if (!id.isValid()) return;
+void BrowserCore::closeTab(TabId id) {
+    post([this, id] {
+        if (!id.isValid())
+            return;
               _tabManager->closeTab(id);
           });
 }
 
-void BrowserCore::visitUrl(TabId id, Url url)
-{
-    _post([this, id, url]
-          {
+void BrowserCore::visitUrl(TabId id, Url url) {
+    post([this, id, url] {
               std::cerr << "\nVisitURL\n";
               if (!id.isValid())
                   return;
               _tabManager->visitUrl(id, url);
               navigationRequested.invoke(NavigationRequestedArgs{
-                                                                 NavigationType::NewPage,
-                                                                 _tabManager->getTab(id)->toTabInfo()});
+                                                           NavigationType::NewPage, _tabManager->getTab(id)->toTabInfo()});
               // urlVisited.invoke(UrlVisitedArgs{id, url});
           });
 }
 
-void BrowserCore::changeTabUrl(TabId id, Url url)
-{
-    _post([this, id, url]
-          {
+void BrowserCore::changeTabUrl(TabId id, Url url) {
+    post([this, id, url] {
               if (!id.isValid())
                   return;
               _tabManager->changeTabUrl(id, url);
               navigationRequested.invoke(NavigationRequestedArgs{
-                                                                 NavigationType::Redirect,
-                                                                 _tabManager->getTab(id)->toTabInfo()});
+                                                           NavigationType::Redirect, _tabManager->getTab(id)->toTabInfo()});
           });
 }
 
-
-void BrowserCore::changeTabTitle(TabId id, std::string title)
-{
-    _post([this, id, title]
-          {
+void BrowserCore::changeTabTitle(TabId id, std::string title) {
+    post([this, id, title] {
               if (!id.isValid())
                   return;
               _tabManager->changeTabTitle(id, title);
           });
 }
 
-void BrowserCore::setTabLoadingStatus(TabId id, bool isLoading)
-{
-    _post([this, id, isLoading]
-          {
+void BrowserCore::setTabLoadingStatus(TabId id, bool isLoading) {
+    post([this, id, isLoading] {
               if (!id.isValid())
                   return;
               _tabManager->setTabLoadingStatus(id, isLoading);
           });
 }
 
-void BrowserCore::changeTabLoadingProgress(TabId id, int progress)
-{
-    _post([this, id, progress]
-          {
+void BrowserCore::changeTabLoadingProgress(TabId id, int progress) {
+    post([this, id, progress] {
               if (!id.isValid())
                   return;
               _tabManager->changeTabLoadingProgress(id, progress);
           });
 }
 
-
-void BrowserCore::changeActiveTab(TabId id)
-{
-    _post([this, id] {
+void BrowserCore::changeActiveTab(TabId id) {
+    post([this, id] {
         if (!id.isValid())
             return;
         _tabManager->changeActiveTab(id);
     });
 }
 
-void BrowserCore::reloadTab(TabId id)
-{
-    _post([this, id]{
+void BrowserCore::reloadTab(TabId id) {
+    post([this, id] {
         if (!id.isValid())
             return;
         _tabManager->reloadTab(id);
     });
 }
 
-
-
-
-void BrowserCore::goBack(TabId id)
-{
+void BrowserCore::goBack(TabId id) {
+    post([this, id] {
     if (!id.isValid())
         return;
     _tabManager->goBack(id);
+    });
 }
-void BrowserCore::goForward(TabId id)
-{
+void BrowserCore::goForward(TabId id) {
+    post([this, id] {
     if (!id.isValid())
         return;
     _tabManager->goForward(id);
+    });
 }
 
-
-
-
-void BrowserCore::moveTab(TabId id, int newIndex)
-{
+void BrowserCore::moveTab(TabId id, int newIndex) {
+    post([this, id, newIndex] {
     if (!id.isValid())
         return;
     _tabManager->moveTab(id, newIndex);
+    });
 }
 
 // --------
+// unused
 
 bool BrowserCore::canGoBack(TabId id)
 {

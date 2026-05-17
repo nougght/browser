@@ -9,6 +9,7 @@ set(CORE_SOURCES
     include/core/Identifier.h
     include/core/Tab.h
     include/core/TabHistory.h
+    include/core/interfaces/ICoreDispatcher.h
 
     src/BrowserCore.cpp
     src/common/Url.cpp
