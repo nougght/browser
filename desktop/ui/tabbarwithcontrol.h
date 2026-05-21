@@ -14,7 +14,7 @@ class TabBarWithControl : public QFrame
     Q_OBJECT
 public:
     TabBarWithControl(QWidget *parent, QAbstractListModel *model);
-    void setupUI();
+
 
 
 signals:
@@ -23,7 +23,7 @@ signals:
     void newTabClicked();
     void tabClicked(int index);
 private:
-
+    void setupUI();
     class ItemDelegate : public QStyledItemDelegate
     {
         QSize sizeHint(const QStyleOptionViewItem &option,

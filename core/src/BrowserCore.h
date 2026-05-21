@@ -75,6 +75,8 @@ public:
 
     void reloadTab(TabId id) override;
 
+    void loadHistory() override;
+
     // прямые геттеры в основном классе не используются, вместо них - события
     // т.к. ядро в отдельном потоке
 

@@ -39,6 +39,9 @@ signals:
     void loadingStatusChanged(TabLoadingStatusChangedArgs args);
     void loadingProgressChanged(TabLoadingProgressChangedArgs args);
 
+    void historyLoaded(std::vector<HistoryEntry> history);
+    void historyEntryAdded(HistoryEntry entry);
+
 public slots:
     void loadTabs();
     void createTab(QUrl url);
@@ -55,6 +58,8 @@ public slots:
     void setTabLoadingStatus(TabId id, bool isLoading);
 
     void reloadTab(TabId id);
+
+    void loadHistory();
 
 private:
     void _setupEvents();

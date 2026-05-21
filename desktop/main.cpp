@@ -1,13 +1,13 @@
 #include "ui/mainwindow.h"
 #include "binder/AppBinder.h"
 #include "controllers/MainWindowController.h"
+#include "controllers/HistoryController.h"
+#include "models/historymodel.h"
 
 #include <QApplication>
 #include <QLocale>
 #include <QTranslator>
 #include <QFile>
-#include <fstream>
-#include <sstream>
 
 int main(int argc, char *argv[])
 {
@@ -29,9 +29,11 @@ int main(int argc, char *argv[])
     std::unique_ptr<IBrowserCore> core(CreateBrowserCore());
     auto coreAdapter = std::make_unique<CoreAdapter>(core.get());
     auto tabsModel = new TabsModel();
-    auto mainWindow = new MainWindow(tabsModel);
+    auto historyModel = new HistoryModel();
+    auto mainWindow = new MainWindow(tabsModel, historyModel);
     auto mainController = std::make_unique<MainWindowController>(coreAdapter.get());
     auto tabsController = std::make_unique<TabsController>(coreAdapter.get(), tabsModel);
+    auto historyController = std::make_unique<HistoryController>(coreAdapter.get(), historyModel);
 
     // bind controller and view signals
     AppBinder binder(mainWindow, mainController.get(), tabsController.get());
@@ -47,6 +49,7 @@ int main(int argc, char *argv[])
     }
 
     coreAdapter->loadTabs();
+    coreAdapter->loadHistory();
     mainWindow->show();
 
     return a.exec();

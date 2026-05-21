@@ -2,7 +2,6 @@
 #include <QHBoxLayout>
 #include <QSpacerItem>
 #include <QSizePolicy>
-#include "models/tabsmodel.h"
 
 
 TabBarWithControl::TabBarWithControl(QWidget *parent, QAbstractListModel *model) : QFrame(parent), _tabsModel(model)
@@ -29,8 +28,6 @@ void TabBarWithControl::setupUI()
 
     _tabsList->setModel(_tabsModel);
     _tabsList->setItemAlignment(Qt::AlignmentFlag::AlignCenter);
-    _tabsList->setFlow(QListView::Flow::LeftToRight);
-    _tabsList->setWrapping(false);
     // _tabsList->setUniformItemSizes(true);
     _tabsList->setWordWrap(false);
     _tabsList->setItemDelegate(new ItemDelegate());

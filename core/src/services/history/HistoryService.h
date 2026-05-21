@@ -8,11 +8,13 @@
 class HistoryService
 {
 private:
-
-
     IHistoryRepository *_historyRepo;
 public:
     HistoryService(IHistoryRepository *historyRepo);
     void onNavigation(NavigationRequestedArgs args);
+    void loadHistory();
+    Event<std::vector<HistoryEntry>> historyLoaded;
+    Event<HistoryEntry> entryAdded;
+
 };
 #endif

@@ -14,17 +14,15 @@ class MainWindowController : public QObject
 
 public:
     MainWindowController(CoreAdapter *coreAdapter);
-
+    void onHistoryClicked();
 signals:
-
+    void historyPageRequested();
 private:
     void _setupEvents();
 
     // MainWindow *_mainWindow;
     CoreAdapter *_coreAdapter;
 
-    TabsModel *_tabsModel;
-    TabId _activeTabId;
 };
 
 #endif

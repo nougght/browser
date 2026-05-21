@@ -1,16 +1,14 @@
 #include "BrowserCore.h"
 #include "services/tabs/TabManager.h"
 
-
 IBrowserCore *CreateBrowserCore() { return new BrowserCore; }
 BrowserCore::BrowserCore()
     : _dbManager(std::make_unique<DatabaseManager>("test.db")),
-    _historyRepo(std::make_unique<HistoryRepository>(_dbManager.get())),
+    _historyRepo(std::make_unique<HistoryRepository>(_dbManager.get(), this)),
     _historyService(std::make_unique<HistoryService>(_historyRepo.get())),
 
     _tabManager(std::make_unique<TabManager>()),
-    _eventLoopWorker([this] { _run(); })
-{
+    _eventLoopWorker([this] { _run(); }) {
     post([this] {
         _subs.push_back(std::make_unique<Subscription<TabInfo>>(
             _tabManager->tabCreated.subscribe(
@@ -57,6 +55,20 @@ BrowserCore::BrowserCore()
         _subs.push_back(std::make_unique<Subscription<TabIconChangedArgs>>(
             _tabManager->iconChanged.subscribe(
                 [this](TabIconChangedArgs args) { iconChanged.invoke(args); })));
+
+        _subs.push_back(std::make_unique<Subscription<std::vector<HistoryEntry>>>(
+            _historyService->historyLoaded.subscribe(
+                [this](std::vector<HistoryEntry> history) {
+                    std::cout << "\n browser core history loaded\n";
+                    historyLoaded.invoke(history);
+                })));
+
+        _subs.push_back(std::make_unique<Subscription<HistoryEntry>>(
+            _historyService->entryAdded.subscribe(
+                [this](HistoryEntry entry) {
+                    std::cout << "\n browser core history entry added\n";
+                    historyEntryAdded.invoke(entry);
+                })));
     });
 }
 
@@ -117,6 +129,9 @@ void BrowserCore::loadTabs() {
     //       { tabsLoaded.invoke(_tabManager->getTabInfos()); });
 }
 
+void BrowserCore::loadHistory() {
+    post([this]{_historyService->loadHistory();});
+}
 void BrowserCore::createTab(Url url) {
     post([this, url = std::move(url)] {
         TabId id = _tabManager->createTab(url);

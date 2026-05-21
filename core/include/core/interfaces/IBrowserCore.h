@@ -27,6 +27,7 @@ public:
     virtual void setTabLoadingStatus(TabId id, bool isLoading) = 0;
 
     virtual void reloadTab(TabId id) = 0;
+    virtual void loadHistory() = 0;
 
 
     // события ядра
@@ -62,6 +63,11 @@ public:
 
     // перезагрузка вкладки
     Event<TabId> tabReloaded;
+
+
+
+    Event<std::vector<HistoryEntry>> historyLoaded;
+    Event<HistoryEntry> historyEntryAdded;
 };
 
 

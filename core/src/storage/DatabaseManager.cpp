@@ -1,6 +1,8 @@
 #include "DatabaseManager.h"
 #include <iostream>
+#include <fstream>
 #include <thread>
+#include <sstream>
 
 DatabaseManager::DatabaseManager(const std::string &dbPath) {
     sqlite3 *db;
@@ -8,24 +10,30 @@ DatabaseManager::DatabaseManager(const std::string &dbPath) {
 
     _dbPtr.reset(db);
 
-    std::string query = "CREATE TABLE IF NOT EXISTS history ("
-                        "id INTEGER PRIMARY KEY AUTOINCREMENT,"
-                        "url TEXT NOT NULL,"
-                        "title TEXT,"
-                        "visit_time INTEGER);";
+    _dbThread = std::thread(([this, dbPath] { run(); }));
 
-    if (sqlite3_exec(_dbPtr.get(), query.c_str(), nullptr, nullptr, nullptr) ==
+}
+
+void DatabaseManager::run() {
+    std::ifstream f("core_build/init.sql");
+    if (f.is_open() == false){
+        std::cout << "\nFILE NOT OPEN\n";
+    } else {
+        std::cout << "\nFILE OPEN\n";
+
+    }
+    std::stringstream ss;
+    ss << f.rdbuf();
+    std::cout << ss.str() << std::endl;
+    if (sqlite3_exec(_dbPtr.get(), ss.str().c_str(), nullptr, nullptr, nullptr) ==
         0) {
         std::cout << "ok" << std::endl;
     }
 
-    _dbThread = std::thread(([this] { run(); }));
 
     std::this_thread::sleep_for(std::chrono::seconds(1));
     std::cout << "end";
-}
 
-void DatabaseManager::run() {
     while (true) {
         std::function<void(sqlite3 *)> task;
         {

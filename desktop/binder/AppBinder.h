@@ -24,7 +24,7 @@ public:
         QObject::connect(_tabsController, &TabsController::backNavigationAvailabilityChanged, _mainWindow, &MainWindow::setBackButtonEnabled);
         QObject::connect(_tabsController, &TabsController::forwardNavigationAvailabilityChanged, _mainWindow, &MainWindow::setForwardButtonEnabled);
 
-
+        QObject::connect(_mainController, &MainWindowController::historyPageRequested, _mainWindow, &MainWindow::showHistoryPage);
         
         QObject::connect(_mainWindow, &MainWindow::newTabClicked, _tabsController, & TabsController::onNewTabClicked);
         QObject::connect(_mainWindow, &MainWindow::tabClicked, _tabsController, & TabsController::onTabClicked);
@@ -37,6 +37,9 @@ public:
         QObject::connect(_mainWindow, &MainWindow::loadStarted, _tabsController, & TabsController::onLoadStarted);
         QObject::connect(_mainWindow, &MainWindow::loadFinished, _tabsController, & TabsController::onLoadFinished);
         QObject::connect(_mainWindow, &MainWindow::loadProgress, _tabsController, & TabsController::onLoadProgress);
+
+
+        QObject::connect(_mainWindow, &MainWindow::historyClicked, _mainController, &MainWindowController::onHistoryClicked);
     }
 
 private:

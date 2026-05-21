@@ -15,6 +15,7 @@ set(CORE_SOURCES
     src/domain/Tab.h
 
     src/domain/TabHistory.h
+    src/interfaces/IHistoryRepository.h
     src/storage/DatabaseManager.h
     src/storage/DatabaseManager.cpp
     src/storage/repositories/HistoryRepository.h

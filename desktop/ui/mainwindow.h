@@ -8,15 +8,12 @@
 #include <QStackedWidget>
 #include <QProgressBar>
 
-#include <memory>
 #include <map>
 
 #include "tabbarwithcontrol.h"
-#include "../models/tabsmodel.h"
-
-#include "core/Url.h"
+#include "browsermenu.h"
+#include "historypage.h"
 #include "core/Identifier.h"
-#include "core/Event.h"
 
 // to do: выделить контроллер из виджета и оставить только ui
 
@@ -25,7 +22,7 @@ class MainWindow : public QMainWindow
     Q_OBJECT
 
 public:
-    MainWindow(QAbstractListModel *tabsModel);
+    MainWindow(QAbstractListModel *tabsModel, QAbstractListModel *historyModel);
     ~MainWindow();
 
 signals:
@@ -39,6 +36,7 @@ signals:
     void backClicked();
     void forwardClicked();
 
+    void historyClicked();
 
     void searchClicked(QString searchQuery);
     void engineUrlChanged(TabId id, QUrl newUrl);
@@ -65,11 +63,15 @@ public slots:
     void navigateForward(TabInfo tabInfo);
     void visitUrl(TabInfo tab);
 
+    void showHistoryPage();
+
 
 private:
-    void setupUI(QAbstractListModel *tabsModel);
+    void setupUI(QAbstractListModel *tabsModel, QAbstractListModel *historyModel);
     void setupEvents();
     void setupTabViewEvents(TabId tabId, QWebEngineView *tabView);
+
+    void menuClicked();
 
 
     QWidget *_centralWidget;
@@ -79,9 +81,13 @@ private:
     QPushButton *_reloadButton;
     QPushButton *_backButton;
     QPushButton *_forwardButton;
+    QPushButton *_menuButton;
     TabBarWithControl *_tabBar;
     QProgressBar *_loadingBar;
     QWidget *_prgsBarPlaceholder;
+
+    BrowserMenu *_menu;
+    HistoryPage *_historyPage;
     QStackedWidget *_stackedWidget;
 
     std::map<TabId, QWebEngineView *> _tabWidgets;
