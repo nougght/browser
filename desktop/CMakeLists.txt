@@ -31,6 +31,8 @@ set(PROJECT_SOURCES
         controllers/TabsController.h
         controllers/TabsController.cpp
         controllers/HistoryController.h
+        controllers/HistoryController.cpp
+
         controllers/BookmarksController.h
 
         models/tabsmodel.h
@@ -42,11 +44,16 @@ set(PROJECT_SOURCES
 )
 
 if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
-    qt_add_executable(desktop
+
+qt_add_executable(desktop
         MANUAL_FINALIZATION
         ${PROJECT_SOURCES}
 
         resources.qrc
+        ui/test.ui
+        ui/browsermenu.h ui/browsermenu.cpp
+        ui/historypage.h ui/historypage.cpp
+        models/historymodel.h models/historymodel.cpp
     )
 
 

@@ -1,4 +1,4 @@
-#include <core/Tab.h>
+#include "domain/Tab.h"
 
 Tab::Tab(TabId id, Url url) : _id(id), _url(url), _isLoading(false), _loadingProgress(0)
 {

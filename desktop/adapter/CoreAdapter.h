@@ -4,7 +4,7 @@
 #include <memory>
 
 
-#include "core/BrowserCore.h"
+#include "core/interfaces/IBrowserCore.h"
 #include "core/Url.h"
 #include "core/Identifier.h"
 #include "core/Event.h"
@@ -17,7 +17,7 @@ class CoreAdapter: public QObject
     Q_OBJECT
 
 public:
-    CoreAdapter(BrowserCore *core) : _core(core)
+    CoreAdapter(IBrowserCore *core) : _core(core)
     {
         _setupEvents();
     }
@@ -39,6 +39,9 @@ signals:
     void loadingStatusChanged(TabLoadingStatusChangedArgs args);
     void loadingProgressChanged(TabLoadingProgressChangedArgs args);
 
+    void historyLoaded(std::vector<HistoryEntry> history);
+    void historyEntryAdded(HistoryEntry entry);
+
 public slots:
     void loadTabs();
     void createTab(QUrl url);
@@ -56,9 +59,11 @@ public slots:
 
     void reloadTab(TabId id);
 
+    void loadHistory();
+
 private:
     void _setupEvents();
     std::vector<std::unique_ptr<ISubscription>> _subscriptions;
-    BrowserCore *_core;
+    IBrowserCore *_core;
 };
 #endif

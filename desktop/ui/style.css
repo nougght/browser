@@ -14,7 +14,7 @@ QFrame#centralWidget{
     background-color: transparent;
 }
 
-#newTabButton{
+#newTabButton, #menuButton{
     font-size: 15px;
     border: none;
     text-align:center;
@@ -64,7 +64,7 @@ QListView::item
 
 }
 
-#minimiseButton:hover, #newTabButton:hover, #backButton:hover, #forwardButoon:hover, #reloadButton:hover {
+#minimiseButton:hover, #newTabButton:hover, #backButton:hover, #forwardButoon:hover,#menuButton:hover, #reloadButton:hover {
     background-color: rgb(95, 121, 129);
 }
 

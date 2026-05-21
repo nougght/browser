@@ -1,11 +1,11 @@
 #ifndef MODELS_H
 #define MODELS_H
 
-#include "types.h"
 #include "Identifier.h"
 #include "Url.h"
 #include <string>
 
+// 
 struct TabInfo {
     TabId id;
     Url url;
@@ -17,6 +17,7 @@ struct TabInfo {
 };
 
 struct HistoryEntry {
+    int64_t id;
     std::string url;
     std::string title;
     int64_t timestamp;

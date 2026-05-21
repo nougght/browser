@@ -162,3 +162,5 @@ CMakeLists.txt.user*
 
 /build*/
 
+
+*test.ui

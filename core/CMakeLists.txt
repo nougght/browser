@@ -1,17 +1,25 @@
 
 set(CORE_SOURCES
-    include/core/BrowserCore.h
-    include/core/Url.h
     include/core/types.h
     include/core/models.h
     include/core/eventArgs.h
-    include/core/Event.h
+    include/core/Url.h
     include/core/Identifier.h
-    include/core/Tab.h
-    include/core/TabHistory.h
+    include/core/Event.h
+    include/core/interfaces/IBrowserCore.h
+    include/core/interfaces/ICoreDispatcher.h
 
+    src/BrowserCore.h
     src/BrowserCore.cpp
-    src/common/Url.cpp
+    src/domain/Url.cpp
+    src/domain/Tab.h
+
+    src/domain/TabHistory.h
+    src/interfaces/IHistoryRepository.h
+    src/storage/DatabaseManager.h
+    src/storage/DatabaseManager.cpp
+    src/storage/repositories/HistoryRepository.h
+    src/storage/repositories/HistoryRepository.cpp
     src/services/tabs/TabManager.cpp
     src/services/tabs/TabManager.h
     src/services/tabs/Tab.cpp
@@ -20,10 +28,25 @@ set(CORE_SOURCES
     src/services/tabs/TabIdGenerator.h
     src/services/history/HistoryService.h
     src/services/history/HistoryService.cpp
+
+
 )
+find_package(unofficial-sqlite3 CONFIG REQUIRED)
 
 add_library(browser_core STATIC
     ${CORE_SOURCES}
+    src/storage/sql/init.sql
+
+)
+
+add_custom_command(TARGET browser_core POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/storage/sql/init.sql
+    $<TARGET_FILE_DIR:browser_core>
+)
+
+target_link_libraries(browser_core PRIVATE
+    unofficial::sqlite3::sqlite3
 )
 
 target_include_directories(browser_core 

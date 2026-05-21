@@ -3,7 +3,7 @@
 
 #include <string>
 #include <vector>
-#include "Url.h"
+#include <core/Url.h>
 
 // tab's visited history item
 struct TabHistoryItem{
