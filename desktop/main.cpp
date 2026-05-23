@@ -8,6 +8,7 @@
 #include <QLocale>
 #include <QTranslator>
 #include <QFile>
+#include <QTimer>
 
 int main(int argc, char *argv[])
 {
@@ -15,6 +16,7 @@ int main(int argc, char *argv[])
     // QCoreApplication::setAttribute(Qt::AA_ShareOpenGLContexts);
 
     QApplication a(argc, argv);
+    // a.setStyle("Fusion");
 
     QTranslator translator;
     const QStringList uiLanguages = QLocale::system().uiLanguages();
@@ -38,18 +40,21 @@ int main(int argc, char *argv[])
     // bind controller and view signals
     AppBinder binder(mainWindow, mainController.get(), tabsController.get());
     
+    QTimer::singleShot(10, [&]{
+        QFile style(":/ui/style.css");
+        if (style.open(QFile::ReadOnly)){
 
-    QFile style(":/style/ui/style.css");
-    if (style.open(QFile::ReadOnly)){
+            a.setStyleSheet(style.readAll());
+        }
+        else {
+            qDebug() << "\nCan't open style file";
+        }
+    });
 
-        mainWindow->setStyleSheet(style.readAll());
-    }
-    else {
-        qDebug() << "\nCan't open style file";
-    }
 
     coreAdapter->loadTabs();
     coreAdapter->loadHistory();
+    mainWindow->setFixedSize(1000, 800);
     mainWindow->show();
 
     return a.exec();

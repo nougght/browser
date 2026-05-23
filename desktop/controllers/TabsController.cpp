@@ -111,6 +111,7 @@ void TabsController::onTabsLoaded(std::vector<TabInfo> tabs)
     _coreAdapter->changeActiveTab(id);
 }
 
+
 void TabsController::onTabCreated(TabInfo tabInfo)
 {
     _tabsModel->addTab(tabInfo);

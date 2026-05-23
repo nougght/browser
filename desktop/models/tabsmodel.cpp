@@ -35,6 +35,8 @@ void TabsModel::addTab(const TabInfo &tab)
     beginInsertRows(QModelIndex(), _tabs.size(), _tabs.size());
     _tabs.push_back(tab);
     endInsertRows();
+    QModelIndex index = this->index(_tabs.size(), 0);
+    emit tabAdded(std::move(&index));
 }
 
 

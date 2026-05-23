@@ -19,7 +19,6 @@ set(PROJECT_SOURCES
         main.cpp
         ui/mainwindow.cpp
         ui/mainwindow.h
-        ui/style.css
         ui/tabbarwithcontrol.h
         ui/tabbarwithcontrol.cpp
 
@@ -50,7 +49,6 @@ qt_add_executable(desktop
         ${PROJECT_SOURCES}
 
         resources.qrc
-        ui/test.ui
         ui/browsermenu.h ui/browsermenu.cpp
         ui/historypage.h ui/historypage.cpp
         models/historymodel.h models/historymodel.cpp

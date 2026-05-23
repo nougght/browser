@@ -15,6 +15,7 @@ void HistoryPage::setupUI(){
     this->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
 
     _historyList = new QListView();
+    _historyList->setObjectName("historyList");
     _historyList->setFlow(QListView::TopToBottom);
     _historyList->setVerticalScrollBarPolicy(Qt::ScrollBarAsNeeded);
     _historyList->setModel(_historyModel);

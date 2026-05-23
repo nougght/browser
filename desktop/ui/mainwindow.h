@@ -4,6 +4,7 @@
 #include <QMainWindow>
 #include <QLineEdit>
 #include <QWebEngineView>
+
 #include <QVBoxLayout>
 #include <QStackedWidget>
 #include <QProgressBar>
@@ -17,7 +18,7 @@
 
 // to do: выделить контроллер из виджета и оставить только ui
 
-class MainWindow : public QMainWindow
+class MainWindow : public QWidget
 {
     Q_OBJECT
 
@@ -78,6 +79,7 @@ private:
     QVBoxLayout *_centralLayout;
     QHBoxLayout *_searchBarLayout;
     QLineEdit *_search;
+    QToolButton *_bookmarkButton;
     QPushButton *_reloadButton;
     QPushButton *_backButton;
     QPushButton *_forwardButton;

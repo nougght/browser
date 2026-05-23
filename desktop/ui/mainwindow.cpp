@@ -1,8 +1,13 @@
 #include "mainwindow.h"
 #include "browsermenu.h"
+#include <QPainter>
+#include <QPainterPath>
+#include <QTimer>
 #include <QVBoxLayout>
 #include <QWebEngineProfile>
 #include <Qt>
+#include <QFile>
+
 #include <core/eventArgs.h>
 #include <core/models.h>
 #include <core/types.h>
@@ -11,23 +16,40 @@ QUrl convert(Url url) {
     return QUrl(QString::fromStdString(url.toStdString()));
 }
 
-MainWindow::MainWindow(QAbstractListModel *tabsModel, QAbstractListModel *historyModel) {
+MainWindow::MainWindow(QAbstractListModel *tabsModel,
+                       QAbstractListModel *historyModel) {
     setupUI(tabsModel, historyModel);
     setupEvents();
     qDebug() << QWebEngineProfile::defaultProfile()->httpUserAgent();
 }
 
-void MainWindow::setupUI(QAbstractListModel *tabsModel, QAbstractListModel *historyModel) {
+void MainWindow::setupUI(QAbstractListModel *tabsModel,
+                         QAbstractListModel *historyModel) {
+    auto _rootLayout = new QVBoxLayout(this);
+    _rootLayout->setSpacing(0);
+    _rootLayout->setContentsMargins(0, 0, 0, 0);
+
     _centralWidget = new QFrame();
     _centralWidget->setObjectName("centralWidget");
     _centralLayout = new QVBoxLayout(_centralWidget);
     _centralLayout->setSpacing(0);
     _centralLayout->setContentsMargins(0, 0, 0, 0);
-    this->setCentralWidget(_centralWidget);
+
+    _rootLayout->addWidget(_centralWidget);
 
     _tabBar = new TabBarWithControl(_centralWidget, tabsModel);
     _menu = new BrowserMenu();
+    _menu->setWindowFlags(
+        Qt::Popup |
+        Qt::FramelessWindowHint);
+    _menu->setObjectName("browserMenu");
+    _menu->style()->unpolish(_menu);
+    _menu->style()->polish(_menu);
+
+    _menu->ensurePolished();
     _historyPage = new HistoryPage(this, historyModel);
+
+    // layout со строкой поиска
 
     _searchBarLayout = new QHBoxLayout();
     _searchBarLayout->setContentsMargins(0, 0, 8, 0);
@@ -49,7 +71,11 @@ void MainWindow::setupUI(QAbstractListModel *tabsModel, QAbstractListModel *hist
     _search->setObjectName("searchBar");
     _search->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
 
-    _menuButton = new QPushButton(QIcon(":/t/assets/grid.svg"), "");
+    auto bookmark = new QAction(QIcon(":assets/bookmark.svg"), "");
+    _search->addAction(bookmark, QLineEdit::TrailingPosition);
+
+
+    _menuButton = new QPushButton(QIcon(":/assets/grid.svg"), "");
     _menuButton->setObjectName("menuButton");
     _menuButton->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
     _menuButton->setEnabled(true);
@@ -83,6 +109,8 @@ void MainWindow::setupUI(QAbstractListModel *tabsModel, QAbstractListModel *hist
     _centralLayout->addWidget(_prgsBarPlaceholder);
     _centralLayout->addWidget(_stackedWidget);
     this->setMinimumSize(1000, 700);
+
+    // TODO: for native gestures try https://github.com/stdware/qwindowkit
     this->setWindowFlags(Qt::WindowFlags::enum_type::FramelessWindowHint);
     this->setAttribute(Qt::WA_TranslucentBackground);
 }
@@ -97,8 +125,9 @@ void MainWindow::setupEvents() {
             &MainWindow::showMinimized);
     connect(_tabBar, &TabBarWithControl::closeClicked, this, &MainWindow::close);
 
-    connect(_tabBar, &TabBarWithControl::newTabClicked, this,
-            [this] { emit newTabClicked(); });
+    connect(_tabBar, &TabBarWithControl::newTabClicked, this, [this] {
+        emit newTabClicked();
+    });
     connect(_tabBar, &TabBarWithControl::tabClicked, this,
             [this](int index) { emit tabClicked(index); });
 
@@ -111,17 +140,19 @@ void MainWindow::setupEvents() {
 
     connect(_menuButton, &QPushButton::clicked, this, &MainWindow::menuClicked);
 
-    connect(_menu, &BrowserMenu::newTabClicked, this, [this]{
-        emit newTabClicked();
-    });
+    connect(_menu, &BrowserMenu::newTabClicked, this,
+            [this] { emit newTabClicked(); });
 
-    connect(_menu, &BrowserMenu::historyClicked, this, [this]{
-        emit historyClicked();
-    });
+    connect(_menu, &BrowserMenu::historyClicked, this,
+            [this] { emit historyClicked(); });
+
+    // connect(_tabBar, &TabBarWithControl::barDoubleClicked, this,
+    // &MainWindow::switch)
 }
 
 // setup signals for webengine
 void MainWindow::setupTabViewEvents(TabId tabId, QWebEngineView *tabView) {
+    tabView->setObjectName("tabView");
     // настраиваем сигналы при различных событиях от движка
     connect(tabView, &QWebEngineView::urlChanged, this,
             [this, id = tabId](QUrl url) { emit engineUrlChanged(id, url); });
@@ -199,8 +230,6 @@ void MainWindow::addTab(TabInfo tabInfo) {
 void MainWindow::switchToTab(TabInfo tabInfo) {
     auto it = _tabWidgets.find(tabInfo.id);
     if (it != _tabWidgets.end()) {
-        // находим индекс виджета и переключаемся
-        // int index = _stackedWidget->indexOf(it->second);
         _stackedWidget->setCurrentWidget(it->second);
 
         it->second->setFocus();
@@ -208,6 +237,11 @@ void MainWindow::switchToTab(TabInfo tabInfo) {
 
         _backButton->setEnabled(tabInfo.canGoBack);
         _forwardButton->setEnabled(tabInfo.canGoForward);
+        QTimer::singleShot(10, this, [=]() {
+            QMetaObject::invokeMethod(
+                this, [=]() { _tabBar->setTabSelected(std::distance(_tabWidgets.begin(), it)); },
+                Qt::QueuedConnection);
+        });
     }
 }
 
