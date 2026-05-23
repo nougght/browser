@@ -14,6 +14,7 @@
 #include "tabbarwithcontrol.h"
 #include "browsermenu.h"
 #include "historypage.h"
+#include "searchbar.h"
 #include "core/Identifier.h"
 
 // to do: выделить контроллер из виджета и оставить только ui
@@ -45,6 +46,8 @@ signals:
     void loadStarted(TabId id);
     void loadFinished(TabId id);
     void loadProgress(TabId id, int progress);
+
+    void bookmarkToggled();
 
 public slots:
 
@@ -78,8 +81,7 @@ private:
     QWidget *_centralWidget;
     QVBoxLayout *_centralLayout;
     QHBoxLayout *_searchBarLayout;
-    QLineEdit *_search;
-    QToolButton *_bookmarkButton;
+    SearchBar *_search;
     QPushButton *_reloadButton;
     QPushButton *_backButton;
     QPushButton *_forwardButton;

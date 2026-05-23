@@ -3,5 +3,7 @@
         <file>ui/style.css</file>
         <file>assets/grid.svg</file>
         <file>assets/bookmark.svg</file>
+        <file>assets/bm.svg</file>
+        <file>assets/bm-filled.svg</file>
     </qresource>
 </RCC>

@@ -52,6 +52,8 @@ qt_add_executable(desktop
         ui/browsermenu.h ui/browsermenu.cpp
         ui/historypage.h ui/historypage.cpp
         models/historymodel.h models/historymodel.cpp
+        ui/searchbar.h ui/searchbar.cpp
+
     )
 
 

@@ -67,12 +67,7 @@ void MainWindow::setupUI(QAbstractListModel *tabsModel,
     _reloadButton->setObjectName("reloadButton");
     _reloadButton->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
 
-    _search = new QLineEdit(_centralWidget);
-    _search->setObjectName("searchBar");
-    _search->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
-
-    auto bookmark = new QAction(QIcon(":assets/bookmark.svg"), "");
-    _search->addAction(bookmark, QLineEdit::TrailingPosition);
+    _search = new SearchBar();
 
 
     _menuButton = new QPushButton(QIcon(":/assets/grid.svg"), "");
@@ -118,8 +113,8 @@ void MainWindow::setupUI(QAbstractListModel *tabsModel,
 // setup ui signals
 void MainWindow::setupEvents() {
     // отправляем сигналы при различных действиях пользователя
-    connect(_search, &QLineEdit::returnPressed, this,
-            [this] { emit searchClicked(_search->text()); });
+    connect(_search, &SearchBar::searchFinished, this,
+            [this] (QString query){ emit searchClicked(query); });
 
     connect(_tabBar, &TabBarWithControl::minimiseClicked, this,
             &MainWindow::showMinimized);
