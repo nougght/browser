@@ -29,6 +29,9 @@ public:
     virtual void reloadTab(TabId id) = 0;
     virtual void loadHistory() = 0;
 
+    virtual void loadBookmarks() = 0;
+    virtual void switchActiveTabBookmark() = 0;
+    virtual void deleteBookmark(int64_t id) = 0;
 
     // события ядра
 
@@ -68,6 +71,11 @@ public:
 
     Event<std::vector<HistoryEntry>> historyLoaded;
     Event<HistoryEntry> historyEntryAdded;
+
+
+    Event<std::vector<Bookmark>> bookmarksLoaded;
+    Event<Bookmark> bookmarkAdded;
+    Event<size_t> bookmarkDeleted;
 };
 
 

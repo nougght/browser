@@ -18,13 +18,11 @@ SearchBar::SearchBar() {
     _bookmarkButton->setObjectName("bookmarkButton");
     connect(_bookmarkButton, &QToolButton::clicked, this, [this]{
         emit bookmarkToggled();
-        switchBookmark(true);
     });
 
     _hLayout->addWidget(_search, 0, Qt::AlignVCenter);
     _hLayout->addWidget(_bookmarkButton, 0, Qt::AlignVCenter);
     switchBookmark(false);
-
 }
 
 

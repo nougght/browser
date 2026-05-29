@@ -17,22 +17,22 @@ DatabaseManager::DatabaseManager(const std::string &dbPath) {
 void DatabaseManager::run() {
     std::ifstream f("core_build/init.sql");
     if (f.is_open() == false){
-        std::cout << "\nFILE NOT OPEN\n";
+        std::cerr << "\nFILE NOT OPEN\n";
     } else {
-        std::cout << "\nFILE OPEN\n";
+        std::cerr << "\nFILE OPEN\n";
 
     }
     std::stringstream ss;
     ss << f.rdbuf();
-    std::cout << ss.str() << std::endl;
+    std::cerr << ss.str() << std::endl;
     if (sqlite3_exec(_dbPtr.get(), ss.str().c_str(), nullptr, nullptr, nullptr) ==
         0) {
-        std::cout << "ok" << std::endl;
+        std::cerr << "ok" << std::endl;
     }
 
 
     std::this_thread::sleep_for(std::chrono::seconds(1));
-    std::cout << "end";
+    std::cerr << "end";
 
     while (true) {
         std::function<void(sqlite3 *)> task;
@@ -42,7 +42,9 @@ void DatabaseManager::run() {
             task = std::move(_tasks.front());
             _tasks.pop();
         }
+        std::cerr << "\ndb start query\n";
         task(_dbPtr.get());
+        std::cerr << "\ndb finish query\n";
     }
 }
 

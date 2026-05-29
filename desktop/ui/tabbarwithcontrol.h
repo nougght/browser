@@ -8,6 +8,19 @@
 #include <QStyledItemDelegate>
 #include "../models/tabsmodel.h"
 
+class ItemDelegate : public QStyledItemDelegate
+{
+public:
+    ItemDelegate(){
+        this->setObjectName("tabBarItem");
+    }
+    QSize sizeHint(const QStyleOptionViewItem &option,
+                   const QModelIndex &index) const override
+    {
+        return QSize(100, 30);
+    }
+};
+
 // tabbar with control (-,x) buttons
 class TabBarWithControl : public QFrame
 {
@@ -27,14 +40,7 @@ signals:
 private:
     void setupUI();
     void mouseDoubleClickEvent(QMouseEvent *event) override;
-    class ItemDelegate : public QStyledItemDelegate
-    {
-        QSize sizeHint(const QStyleOptionViewItem &option,
-                       const QModelIndex &index) const override
-        {
-            return QSize(100, 30);
-        }
-    };
+
 
     void onTabClicked(const QModelIndex &index);
     QAbstractListModel * _tabsModel;

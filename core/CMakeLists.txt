@@ -36,6 +36,8 @@ find_package(unofficial-sqlite3 CONFIG REQUIRED)
 add_library(browser_core STATIC
     ${CORE_SOURCES}
     src/storage/sql/init.sql
+    src/services/bookmarks/BookmarkService.h src/services/bookmarks/BookmarkService.cpp
+    src/storage/repositories/BookmarkRepository.h src/storage/repositories/BookmarkRepository.cpp
 
 )
 

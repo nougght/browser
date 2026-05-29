@@ -7,9 +7,15 @@ BrowserCore::BrowserCore()
     _historyRepo(std::make_unique<HistoryRepository>(_dbManager.get(), this)),
     _historyService(std::make_unique<HistoryService>(_historyRepo.get())),
 
+    _bookmarkRepo(
+        std::make_unique<BookmarkRepository>(_dbManager.get(), this)),
+
     _tabManager(std::make_unique<TabManager>()),
     _eventLoopWorker([this] { _run(); }) {
+
     post([this] {
+        _bookmarkService = std::make_unique<BookmarkService>(_bookmarkRepo.get(),
+                                                             _tabManager.get());
         _subs.push_back(std::make_unique<Subscription<TabInfo>>(
             _tabManager->tabCreated.subscribe(
                 [this](TabInfo tabInfo) { this->tabCreated.invoke(tabInfo); })));
@@ -59,16 +65,27 @@ BrowserCore::BrowserCore()
         _subs.push_back(std::make_unique<Subscription<std::vector<HistoryEntry>>>(
             _historyService->historyLoaded.subscribe(
                 [this](std::vector<HistoryEntry> history) {
-                    std::cout << "\n browser core history loaded\n";
+                    std::cerr << "\n browser core history loaded\n";
                     historyLoaded.invoke(history);
                 })));
 
         _subs.push_back(std::make_unique<Subscription<HistoryEntry>>(
-            _historyService->entryAdded.subscribe(
-                [this](HistoryEntry entry) {
-                    std::cout << "\n browser core history entry added\n";
-                    historyEntryAdded.invoke(entry);
-                })));
+            _historyService->entryAdded.subscribe([this](HistoryEntry entry) {
+                std::cerr << "\n browser core history entry added\n";
+                historyEntryAdded.invoke(entry);
+            })));
+
+        _subs.push_back(std::make_unique<Subscription<std::vector<Bookmark>>>(
+            _bookmarkService->bookmarksLoaded.subscribe(
+                [this](auto bookmarks) { bookmarksLoaded.invoke(bookmarks); })));
+
+        _subs.push_back(std::make_unique<Subscription<Bookmark>>(
+            _bookmarkService->bookmarkAdded.subscribe(
+                [this](auto bookmark) { bookmarkAdded.invoke(bookmark); })));
+
+        _subs.push_back(std::make_unique<Subscription<size_t>>(
+            _bookmarkService->bookmarkDeleted.subscribe(
+                [this](auto ind) { bookmarkDeleted.invoke(ind); })));
     });
 }
 
@@ -130,8 +147,24 @@ void BrowserCore::loadTabs() {
 }
 
 void BrowserCore::loadHistory() {
-    post([this]{_historyService->loadHistory();});
+    post([this] { _historyService->loadHistory(); });
 }
+
+void BrowserCore::loadBookmarks() {
+    post([this] { _bookmarkService->loadBookmarks(); });
+}
+
+void BrowserCore::switchActiveTabBookmark() {
+    post([this] {
+        std::printf("browser core switch tab bookmark");
+        _bookmarkService->switchActiveTabBookmark();
+    });
+}
+
+void BrowserCore::deleteBookmark(int64_t id) {
+    post([this, id] { _bookmarkService->deleteBookmark(id); });
+}
+
 void BrowserCore::createTab(Url url) {
     post([this, url = std::move(url)] {
         TabId id = _tabManager->createTab(url);

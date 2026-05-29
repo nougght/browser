@@ -1,17 +1,18 @@
-#include "ui/mainwindow.h"
 #include "binder/AppBinder.h"
-#include "controllers/MainWindowController.h"
 #include "controllers/HistoryController.h"
+#include "controllers/MainWindowController.h"
+#include "models/UIContext.h"
+#include "models/bookmarkmodel.h"
 #include "models/historymodel.h"
+#include "ui/mainwindow.h"
 
 #include <QApplication>
-#include <QLocale>
-#include <QTranslator>
 #include <QFile>
+#include <QLocale>
 #include <QTimer>
+#include <QTranslator>
 
-int main(int argc, char *argv[])
-{
+int main(int argc, char *argv[]) {
     // QCoreApplication::setAttribute(Qt::AA_UseDesktopOpenGL);
     // QCoreApplication::setAttribute(Qt::AA_ShareOpenGLContexts);
 
@@ -27,33 +28,41 @@ int main(int argc, char *argv[])
             break;
         }
     }
-    
+
     std::unique_ptr<IBrowserCore> core(CreateBrowserCore());
     auto coreAdapter = std::make_unique<CoreAdapter>(core.get());
-    auto tabsModel = new TabsModel();
-    auto historyModel = new HistoryModel();
-    auto mainWindow = new MainWindow(tabsModel, historyModel);
-    auto mainController = std::make_unique<MainWindowController>(coreAdapter.get());
-    auto tabsController = std::make_unique<TabsController>(coreAdapter.get(), tabsModel);
-    auto historyController = std::make_unique<HistoryController>(coreAdapter.get(), historyModel);
 
+    auto context = new UIContext(coreAdapter.get());
+
+    auto mainWindow = new MainWindow(context->getTabsModel(),
+                                     context->getHistoryModel(),
+                                     context->getBookmarkModel());
+
+    auto mainController =
+        std::make_unique<MainWindowController>(coreAdapter.get());
+    auto tabsController =
+        std::make_unique<TabsController>(coreAdapter.get(), context);
+    auto historyController =
+        std::make_unique<HistoryController>(coreAdapter.get(), context);
+    auto bookmarkController =
+        std::make_unique<BookmarkController>(coreAdapter.get(), context);
     // bind controller and view signals
-    AppBinder binder(mainWindow, mainController.get(), tabsController.get());
-    
-    QTimer::singleShot(10, [&]{
+    AppBinder binder(mainWindow, mainController.get(), tabsController.get(),
+                     bookmarkController.get());
+
+    QTimer::singleShot(10, [&] {
         QFile style(":/ui/style.css");
-        if (style.open(QFile::ReadOnly)){
+        if (style.open(QFile::ReadOnly)) {
 
             a.setStyleSheet(style.readAll());
-        }
-        else {
+        } else {
             qDebug() << "\nCan't open style file";
         }
     });
 
-
     coreAdapter->loadTabs();
     coreAdapter->loadHistory();
+    coreAdapter->loadBookmarks();
     mainWindow->setFixedSize(1000, 800);
     mainWindow->show();
 

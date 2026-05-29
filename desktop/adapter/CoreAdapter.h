@@ -42,6 +42,9 @@ signals:
     void historyLoaded(std::vector<HistoryEntry> history);
     void historyEntryAdded(HistoryEntry entry);
 
+    void bookmarksLoaded(std::vector<Bookmark> bookmarks);
+    void bookmarkAdded(Bookmark bookmark);
+    void bookmarkDeleted(size_t ind);
 public slots:
     void loadTabs();
     void createTab(QUrl url);
@@ -60,6 +63,10 @@ public slots:
     void reloadTab(TabId id);
 
     void loadHistory();
+
+    void loadBookmarks();
+    void switchActiveTabBookmark();
+    void deleteBookmark(int64_t id);
 
 private:
     void _setupEvents();

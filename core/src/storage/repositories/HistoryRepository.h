@@ -12,7 +12,7 @@ private:
 public:
     HistoryRepository(DatabaseManager *dbManager, ICoreDispatcher *dispatcher);
 
-    void addVisit(const HistoryEntry &entry) override;
+    void addVisit(HistoryEntry &entry) override;
     // void deleteEntry(int64_t id) override;
     // void deleteAll() override;
 

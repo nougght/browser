@@ -18,3 +18,9 @@ void MainWindowController::onHistoryClicked()
 {
     emit historyPageRequested();
 }
+
+
+void MainWindowController::onBookmarksClicked()
+{
+    emit bookmarksPageRequested();
+}

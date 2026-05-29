@@ -2,6 +2,7 @@
 #include <QHBoxLayout>
 #include <QSizePolicy>
 #include <QSpacerItem>
+#include <QScrollBar>
 
 TabBarWithControl::TabBarWithControl(QWidget *parent, QAbstractListModel *model)
     : QFrame(parent), _tabsModel(model) {
@@ -23,8 +24,12 @@ void TabBarWithControl::setupUI() {
     _tabsList->setWrapping(false);
     _tabsList->setHorizontalScrollBarPolicy(Qt::ScrollBarAsNeeded);
     _tabsList->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
-    connect(_tabsList, &QListView::clicked, this,
-            &TabBarWithControl::onTabClicked);
+    _tabsList->setContentsMargins(0, 0,0,0);
+    _tabsList->setSpacing(0);
+    _tabsList->setResizeMode(QListView::ResizeMode::Fixed);
+    // _tabsList->setSizeAdjustPolicy(QAbstractScrollArea::AdjustToContents);
+    _tabsList->setGridSize(QSize(100, 30));
+    _tabsList->setHorizontalScrollMode(QAbstractItemView::ScrollPerPixel);
 
     _tabsList->setModel(_tabsModel);
     _tabsList->setItemAlignment(Qt::AlignmentFlag::AlignCenter);
@@ -32,13 +37,33 @@ void TabBarWithControl::setupUI() {
     _tabsList->setWordWrap(false);
     _tabsList->setItemDelegate(new ItemDelegate());
 
-    _tabsList->setSelectionRectVisible(true);
-    // политика высоты - ignored, чтобы список не растягивал layout
-    _tabsList->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Ignored);
+    _tabsList->setSelectionRectVisible(false);
+    _tabsList->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
+    int initialHeight = _tabsList->gridSize().height() + (_tabsList->spacing() * 2);
+    _tabsList->setFixedHeight(initialHeight);
 
+    connect(_tabsList->horizontalScrollBar(), &QScrollBar::rangeChanged, this, [this](int min, int max) {
+        int itemHeight = _tabsList->gridSize().height(); // 30
+        int frameWidth =_tabsList->frameWidth() * 2;     // Рамки виджета (обычно 2-4px)
+        int spacing = 0;           // Отступы вокруг элемента (4px)
+
+        // Базовая высота без скроллбара
+        int targetHeight = itemHeight+ spacing; // ~36-38px
+
+        // Если max > 0, значит контент не влезает и скроллбар появился
+        if (max > 0) {
+            targetHeight += _tabsList->horizontalScrollBar()->sizeHint().height();
+        }
+
+        // Динамически меняем высоту списка
+        _tabsList->setFixedHeight(targetHeight);
+    });
+
+    connect(_tabsList, &QListView::clicked, this,
+            &TabBarWithControl::onTabClicked);
     // _tabsList->setMaximumHeight(35);
-    qDebug() << "\n TAB LIST SIZE = " << _tabsList->size();
-    _layout->addWidget(_tabsList, 0);
+    qDebug() << "\nTAB LIST SIZE = " << _tabsList->size();
+    _layout->addWidget(_tabsList, 0, Qt::AlignTop);
 
     auto spacer = new QSpacerItem(5, 20, QSizePolicy::Fixed, QSizePolicy::Fixed);
     _layout->addItem(spacer);

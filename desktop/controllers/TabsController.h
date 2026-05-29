@@ -3,16 +3,15 @@
 
 #include <QObject>
 #include <core/Identifier.h>
-#include "../adapter/CoreAdapter.h"
-#include "../ui/mainwindow.h"
+#include "adapter/CoreAdapter.h"
+#include "models/UIContext.h"
 
 class TabsController : public QObject
 {
     Q_OBJECT
 
 public:
-    TabsController(CoreAdapter *coreAdapter, TabsModel *tabsModel);
-
+    TabsController(CoreAdapter *coreAdapter, UIContext *ctx);
     // slots for core signals
     void onTabsLoaded(std::vector<TabInfo>);
     void onTabCreated(TabInfo tabInfo);
@@ -43,9 +42,9 @@ public:
     void onForwardClicked();
 
 signals:
-    void urlVisitRequested(TabInfo tab);
-    void backNavigationRequested(TabInfo tab);
-    void forwardNavigationRequested(TabInfo tab);
+    void urlVisitRequested(TabInfo tab, bool isBookmarked);
+    void backNavigationRequested(TabInfo tab, bool isBookmarked);
+    void forwardNavigationRequested(TabInfo tab, bool isBookmarked);
     void reloadRequested(TabId tabId);
 
     void activeTabUrlChanged(QUrl newUrl);
@@ -54,18 +53,16 @@ signals:
 
     void tabsLoaded(std::vector<TabInfo> tabs);
     void tabCreated(TabInfo tabInfo);
-    void activeTabChanged(TabInfo tabInfo);
+    void activeTabChanged(TabInfo tabInfo, bool isBookmarked);
     void activeTabLoadingStatusChanged(bool isLoading);
     void activeTabLoadingProgressChanged(int progress);
 
 
 private:
-
     void _setupEvents();
 
     CoreAdapter *_coreAdapter;
-    TabsModel *_tabsModel;
-    TabId _activeTabId;
+    UIContext *_ctx;
 };
 
 #endif

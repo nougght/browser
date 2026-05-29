@@ -5,7 +5,7 @@
 
 class IHistoryRepository {
 public:
-    virtual void addVisit(const HistoryEntry &entry) = 0;
+    virtual void addVisit(HistoryEntry &entry) = 0;
     // virtual void deleteEntry(int64_t id) = 0;
     // virtual void deleteAll() = 0;
 

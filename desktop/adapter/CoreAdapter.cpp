@@ -85,11 +85,44 @@ void CoreAdapter::_setupEvents() {
                 },
                 Qt::QueuedConnection);
         })));
+
+    _subscriptions.push_back(
+        std::make_unique<Subscription<std::vector<Bookmark>>>(
+            _core->bookmarksLoaded.subscribe([this](auto bookmarks) {
+            QMetaObject::invokeMethod(
+                this,
+                [this, bookmarks]() { emit this->bookmarksLoaded(bookmarks); },
+                    Qt::QueuedConnection);
+            })));
+    _subscriptions.push_back(std::make_unique<Subscription<Bookmark>>(
+        _core->bookmarkAdded.subscribe([this](auto bookmark) {
+            QMetaObject::invokeMethod(
+                this, [this, bookmark]() { emit this->bookmarkAdded(bookmark); },
+                Qt::QueuedConnection);
+        })));
+    _subscriptions.push_back(std::make_unique<Subscription<size_t>>(
+        _core->bookmarkDeleted.subscribe([this](auto ind) {
+            QMetaObject::invokeMethod(
+                this,
+                [this, ind]() {
+                    qDebug() << "\n adapter bookmark deleted\n";
+                    emit this->bookmarkDeleted(ind);
+                },
+                Qt::QueuedConnection);
+        })));
 }
 
 void CoreAdapter::loadTabs() { _core->loadTabs(); }
 
 void CoreAdapter::loadHistory() { _core->loadHistory(); }
+
+void CoreAdapter::loadBookmarks() { _core->loadBookmarks(); }
+void CoreAdapter::switchActiveTabBookmark() {
+
+    qDebug() << "\n adapter switch tab bookmark\n";
+    _core->switchActiveTabBookmark();
+}
+void CoreAdapter::deleteBookmark(int64_t id) { _core->deleteBookmark(id); }
 void CoreAdapter::createTab(QUrl url) { _core->createTab(convert(url)); }
 
 void CoreAdapter::createTab() { _core->createTab(); }
