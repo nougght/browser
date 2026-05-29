@@ -35,6 +35,9 @@ public:
 
     int getTabIndex(TabId id);
     TabInfo getTabInfo(TabId id);
+
+signals:
+    void tabAdded(QModelIndex *index);
 private:
 
     std::vector<TabInfo> _tabs;

@@ -8,6 +8,9 @@
 class HistoryService
 {
 private:
+    std::unordered_map<int64_t, size_t> _index;
+    std::vector<std::unique_ptr<Bookmark>> _bookmarks;
+
     IHistoryRepository *_historyRepo;
 public:
     HistoryService(IHistoryRepository *historyRepo);

@@ -1,34 +1,36 @@
 #ifndef MAINWINDOW_H
 #define MAINWINDOW_H
 
-#include <QMainWindow>
 #include <QLineEdit>
+#include <QMainWindow>
 #include <QWebEngineView>
-#include <QVBoxLayout>
-#include <QStackedWidget>
+
 #include <QProgressBar>
+#include <QStackedWidget>
+#include <QVBoxLayout>
 
 #include <map>
 
-#include "tabbarwithcontrol.h"
+#include "bookmarkspage.h"
 #include "browsermenu.h"
-#include "historypage.h"
 #include "core/Identifier.h"
+#include "historypage.h"
+#include "searchbar.h"
+#include "tabbarwithcontrol.h"
 
 // to do: выделить контроллер из виджета и оставить только ui
 
-class MainWindow : public QMainWindow
-{
+class MainWindow : public QWidget {
     Q_OBJECT
 
 public:
-    MainWindow(QAbstractListModel *tabsModel, QAbstractListModel *historyModel);
+    MainWindow(QAbstractListModel *tabsModel, QAbstractListModel *historyModel,
+               QAbstractListModel *bookmarksModel);
     ~MainWindow();
 
 signals:
     void minimiseClicked();
     void closeClicked();
-
 
     void newTabClicked();
     void tabClicked(int index);
@@ -45,11 +47,14 @@ signals:
     void loadFinished(TabId id);
     void loadProgress(TabId id, int progress);
 
+    void bookmarkToggled();
+    void bookmarksClicked();
+
 public slots:
 
     void addTabs(std::vector<TabInfo> tabs);
     void addTab(TabInfo tabInfo);
-    void switchToTab(TabInfo tabInfo);
+    void switchToTab(TabInfo tabInfo, bool isBookmarked);
 
     void setLoadingBarVisible(bool isVisible);
     void setLoadingProgress(int progress);
@@ -59,15 +64,20 @@ public slots:
     void updateUrlBar(QUrl newUrl);
     // void updateTabTitle(TabId id, std::string title);
     void reloadTab(TabId id);
-    void navigateBack(TabInfo tabInfo);
-    void navigateForward(TabInfo tabInfo);
-    void visitUrl(TabInfo tab);
+    void navigateBack(TabInfo tabInfo, bool isBookmarked);
+    void navigateForward(TabInfo tabInfo, bool isBookmarked);
+    void visitUrl(TabInfo tab, bool isBookmarked);
 
+
+    // TODO: move to navigation controller
     void showHistoryPage();
+    void showBookmarksPage();
 
+    void switchActiveTabBookmark(bool isBookmarked);
 
 private:
-    void setupUI(QAbstractListModel *tabsModel, QAbstractListModel *historyModel);
+    void setupUI(QAbstractListModel *tabsModel, QAbstractListModel *historyModel,
+                 QAbstractListModel *bookmarksModel);
     void setupEvents();
     void setupTabViewEvents(TabId tabId, QWebEngineView *tabView);
 
@@ -77,7 +87,7 @@ private:
     QWidget *_centralWidget;
     QVBoxLayout *_centralLayout;
     QHBoxLayout *_searchBarLayout;
-    QLineEdit *_search;
+    SearchBar *_search;
     QPushButton *_reloadButton;
     QPushButton *_backButton;
     QPushButton *_forwardButton;
@@ -88,6 +98,7 @@ private:
 
     BrowserMenu *_menu;
     HistoryPage *_historyPage;
+    BookmarksPage *_bookmarksPage;
     QStackedWidget *_stackedWidget;
 
     std::map<TabId, QWebEngineView *> _tabWidgets;

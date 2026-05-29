@@ -13,8 +13,10 @@ void TabManager::loadTabs()
     auto tab = std::make_unique<Tab>(id, _initialTabUrl);
     _tabs.emplace(id, std::move(tab));
 
+
     _tabsOrder.push_back(id);
     tabsLoaded.invoke(getTabInfos());
+    changeActiveTab(id);
 }
 
 
@@ -26,6 +28,7 @@ TabId TabManager::createTab(Url url )
 
     _tabsOrder.push_back(id);
     tabCreated.invoke(getTab(id)->toTabInfo());
+    changeActiveTab(id);
     return id;
 }
 

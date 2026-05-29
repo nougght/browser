@@ -5,13 +5,14 @@
 #include <core/Identifier.h>
 #include "adapter/CoreAdapter.h"
 #include "models/historymodel.h"
+#include "models/UIContext.h"
 
 class HistoryController : public QObject
 {
     Q_OBJECT
 
 public:
-    HistoryController(CoreAdapter *coreAdapter, HistoryModel *historyModel);
+    HistoryController(CoreAdapter *coreAdapter, UIContext *ctx);
 
     // slots for core signals
     void onHistoryLoaded(std::vector<HistoryEntry>);
@@ -20,7 +21,7 @@ public:
 
 signals:
 
-    void historyLoaded(std::vector<HistoryEntry> tabs);
+    void historyLoaded(std::vector<HistoryEntry> history);
     void entryAdded(HistoryEntry entry);
 
 
@@ -29,7 +30,7 @@ private:
     void _setupEvents();
 
     CoreAdapter *_coreAdapter;
-    HistoryModel *_historyModel;
+    UIContext *_ctx;
 };
 
 #endif

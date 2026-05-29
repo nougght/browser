@@ -1,8 +1,13 @@
 #include "mainwindow.h"
 #include "browsermenu.h"
+#include <QFile>
+#include <QPainter>
+#include <QPainterPath>
+#include <QTimer>
 #include <QVBoxLayout>
 #include <QWebEngineProfile>
 #include <Qt>
+
 #include <core/eventArgs.h>
 #include <core/models.h>
 #include <core/types.h>
@@ -11,23 +16,41 @@ QUrl convert(Url url) {
     return QUrl(QString::fromStdString(url.toStdString()));
 }
 
-MainWindow::MainWindow(QAbstractListModel *tabsModel, QAbstractListModel *historyModel) {
-    setupUI(tabsModel, historyModel);
+MainWindow::MainWindow(QAbstractListModel *tabsModel,
+                       QAbstractListModel *historyModel,
+                       QAbstractListModel *bookmarksModel) {
+    setupUI(tabsModel, historyModel, bookmarksModel);
     setupEvents();
     qDebug() << QWebEngineProfile::defaultProfile()->httpUserAgent();
 }
 
-void MainWindow::setupUI(QAbstractListModel *tabsModel, QAbstractListModel *historyModel) {
+void MainWindow::setupUI(QAbstractListModel *tabsModel,
+                         QAbstractListModel *historyModel,
+                         QAbstractListModel *bookmarksModel) {
+    auto _rootLayout = new QVBoxLayout(this);
+    _rootLayout->setSpacing(0);
+    _rootLayout->setContentsMargins(0, 0, 0, 0);
+
     _centralWidget = new QFrame();
     _centralWidget->setObjectName("centralWidget");
     _centralLayout = new QVBoxLayout(_centralWidget);
     _centralLayout->setSpacing(0);
     _centralLayout->setContentsMargins(0, 0, 0, 0);
-    this->setCentralWidget(_centralWidget);
+
+    _rootLayout->addWidget(_centralWidget);
 
     _tabBar = new TabBarWithControl(_centralWidget, tabsModel);
     _menu = new BrowserMenu();
+    _menu->setWindowFlags(Qt::Popup | Qt::FramelessWindowHint);
+    _menu->setObjectName("browserMenu");
+    _menu->style()->unpolish(_menu);
+    _menu->style()->polish(_menu);
+
+    _menu->ensurePolished();
     _historyPage = new HistoryPage(this, historyModel);
+    _bookmarksPage = new BookmarksPage(this, bookmarksModel);
+
+    // layout со строкой поиска
 
     _searchBarLayout = new QHBoxLayout();
     _searchBarLayout->setContentsMargins(0, 0, 8, 0);
@@ -45,11 +68,9 @@ void MainWindow::setupUI(QAbstractListModel *tabsModel, QAbstractListModel *hist
     _reloadButton->setObjectName("reloadButton");
     _reloadButton->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
 
-    _search = new QLineEdit(_centralWidget);
-    _search->setObjectName("searchBar");
-    _search->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
+    _search = new SearchBar();
 
-    _menuButton = new QPushButton(QIcon(":/t/assets/grid.svg"), "");
+    _menuButton = new QPushButton(QIcon(":/assets/grid.svg"), "");
     _menuButton->setObjectName("menuButton");
     _menuButton->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
     _menuButton->setEnabled(true);
@@ -76,6 +97,7 @@ void MainWindow::setupUI(QAbstractListModel *tabsModel, QAbstractListModel *hist
 
     _stackedWidget = new QStackedWidget(_centralWidget);
     _stackedWidget->addWidget(_historyPage);
+    _stackedWidget->addWidget(_bookmarksPage);
 
     _centralLayout->addWidget(_tabBar);
     _centralLayout->addLayout(_searchBarLayout);
@@ -83,6 +105,8 @@ void MainWindow::setupUI(QAbstractListModel *tabsModel, QAbstractListModel *hist
     _centralLayout->addWidget(_prgsBarPlaceholder);
     _centralLayout->addWidget(_stackedWidget);
     this->setMinimumSize(1000, 700);
+
+    // TODO: for native gestures try https://github.com/stdware/qwindowkit
     this->setWindowFlags(Qt::WindowFlags::enum_type::FramelessWindowHint);
     this->setAttribute(Qt::WA_TranslucentBackground);
 }
@@ -90,8 +114,11 @@ void MainWindow::setupUI(QAbstractListModel *tabsModel, QAbstractListModel *hist
 // setup ui signals
 void MainWindow::setupEvents() {
     // отправляем сигналы при различных действиях пользователя
-    connect(_search, &QLineEdit::returnPressed, this,
-            [this] { emit searchClicked(_search->text()); });
+    connect(_search, &SearchBar::searchFinished, this,
+            [this](QString query) { emit searchClicked(query); });
+
+    connect(_search, &SearchBar::bookmarkToggled, this,
+            [this]() { emit bookmarkToggled(); });
 
     connect(_tabBar, &TabBarWithControl::minimiseClicked, this,
             &MainWindow::showMinimized);
@@ -111,17 +138,20 @@ void MainWindow::setupEvents() {
 
     connect(_menuButton, &QPushButton::clicked, this, &MainWindow::menuClicked);
 
-    connect(_menu, &BrowserMenu::newTabClicked, this, [this]{
-        emit newTabClicked();
-    });
+    connect(_menu, &BrowserMenu::newTabClicked, this,
+            [this] { emit newTabClicked(); });
+    connect(_menu, &BrowserMenu::historyClicked, this,
+            [this] { emit historyClicked(); });
+    connect(_menu, &BrowserMenu::bookmarksClicked, this,
+            [this] { emit bookmarksClicked(); });
 
-    connect(_menu, &BrowserMenu::historyClicked, this, [this]{
-        emit historyClicked();
-    });
+    // connect(_tabBar, &TabBarWithControl::barDoubleClicked, this,
+    // &MainWindow::switch)
 }
 
 // setup signals for webengine
 void MainWindow::setupTabViewEvents(TabId tabId, QWebEngineView *tabView) {
+    tabView->setObjectName("tabView");
     // настраиваем сигналы при различных событиях от движка
     connect(tabView, &QWebEngineView::urlChanged, this,
             [this, id = tabId](QUrl url) { emit engineUrlChanged(id, url); });
@@ -142,8 +172,9 @@ void MainWindow::setupTabViewEvents(TabId tabId, QWebEngineView *tabView) {
         [this, id = tabId](int progress) { emit loadProgress(id, progress); });
 }
 
-void MainWindow::visitUrl(TabInfo tab) {
+void MainWindow::visitUrl(TabInfo tab, bool isBookmarked) {
     _tabWidgets[tab.id]->load(convert(tab.url));
+    switchActiveTabBookmark(isBookmarked);
 }
 
 void MainWindow::showHistoryPage() {
@@ -151,15 +182,22 @@ void MainWindow::showHistoryPage() {
     _stackedWidget->setCurrentWidget(_historyPage);
 }
 
+void MainWindow::showBookmarksPage() {
+    qDebug() << "show bookmarks";
+    _stackedWidget->setCurrentWidget(_bookmarksPage);
+}
+
 void MainWindow::reloadTab(TabId id) { _tabWidgets[id]->reload(); }
 
-void MainWindow::navigateBack(TabInfo tabInfo) {
+void MainWindow::navigateBack(TabInfo tabInfo, bool isBookmarked) {
     _tabWidgets[tabInfo.id]->back();
+    switchActiveTabBookmark(isBookmarked);
     // _tabBar->updateTabNavigation(tabInfo.id, tabInfo.canGoBack,
     // tabInfo.canGoForward);
 }
-void MainWindow::navigateForward(TabInfo tabInfo) {
+void MainWindow::navigateForward(TabInfo tabInfo, bool isBookmarked) {
     _tabWidgets[tabInfo.id]->forward();
+    switchActiveTabBookmark(isBookmarked);
     // _tabBar->updateTabNavigation(tabInfo.id, tabInfo.canGoBack,
     // tabInfo.canGoForward);
 }
@@ -192,15 +230,12 @@ void MainWindow::addTab(TabInfo tabInfo) {
     tabWidget->load(convert(tabInfo.url));
     _tabWidgets[tabInfo.id] = std::move(tabWidget);
 
-    switchToTab(tabInfo);
 }
 
 // switch active tab
-void MainWindow::switchToTab(TabInfo tabInfo) {
+void MainWindow::switchToTab(TabInfo tabInfo, bool isBookmarked) {
     auto it = _tabWidgets.find(tabInfo.id);
     if (it != _tabWidgets.end()) {
-        // находим индекс виджета и переключаемся
-        // int index = _stackedWidget->indexOf(it->second);
         _stackedWidget->setCurrentWidget(it->second);
 
         it->second->setFocus();
@@ -208,6 +243,18 @@ void MainWindow::switchToTab(TabInfo tabInfo) {
 
         _backButton->setEnabled(tabInfo.canGoBack);
         _forwardButton->setEnabled(tabInfo.canGoForward);
+
+        switchActiveTabBookmark(isBookmarked);
+        QTimer::singleShot(10, this, [=]() {
+            QMetaObject::invokeMethod(
+                this,
+                [=]() {
+                    _tabBar->setTabSelected(std::distance(_tabWidgets.begin(), it));
+
+                    qDebug() << "\nui switched active tab\n";
+                },
+                Qt::QueuedConnection);
+        });
     }
 }
 
@@ -241,6 +288,11 @@ void MainWindow::menuClicked() {
     auto p = QWidget::mapToGlobal(_menuButton->geometry().bottomLeft());
     qDebug() << "\n" << p.x() << " " << p.y();
     _menu->exec(QPoint(p.x() - 200, p.y()));
+}
+
+void MainWindow::switchActiveTabBookmark(bool isBookmarked) {
+    qDebug() << "\nMW switch tab bookmark  " << isBookmarked << "\n";
+    _search->switchBookmark(isBookmarked);
 }
 
 MainWindow::~MainWindow() {}

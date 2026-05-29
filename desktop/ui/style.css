@@ -1,6 +1,25 @@
 QFrame#centralWidget{
-    /*border-radius: 10px;*/
-    background-color: lightblue;
+    background-color: rgb(208, 224, 230);
+    border-radius: 7px;
+    border: 2px solid rgb(136, 138, 138);
+    padding: 0 0 10px 0;
+}
+
+
+
+QStackedWidget{
+    margin: 0;
+    padding: 0;
+}
+
+#tabView {
+
+}
+
+#tabBar {
+    background-color: rgb(148, 200, 219);
+    border-top-left-radius: 4px;
+    border-top-right-radius: 4px;
 }
 
 
@@ -33,36 +52,11 @@ QFrame#centralWidget{
     padding: 1px 8px 4px 8px;
     margin: 2px 0px 2px 10px;
 
-    background-color: rgb(166, 211, 226);
+    /* background-color: rgb(166, 211, 226); */
     border-radius: 7px;
 }
 
-/* #controlPanel{
-    background-color: chartreuse;
-} */
 
-
-#tabBar
-{
-    background-color: rgb(131, 167, 179);
-}
-
-QListView
-{
-    background-color: transparent;
-    margin: 6px 5px 3px 5px;
-    border: none;
-}
-
-QListView::item
-{
-    background-color: aquamarine;
-    border-radius: 8px;
-/*    margin: 2px 4px 0px 2px;*/
-    margin: 0 1px 0 0;
-    text-align: center;
-
-}
 
 #minimiseButton:hover, #newTabButton:hover, #backButton:hover, #forwardButoon:hover,#menuButton:hover, #reloadButton:hover {
     background-color: rgb(95, 121, 129);
@@ -70,20 +64,113 @@ QListView::item
 
 #closeButton:hover {
     background-color: #b32323;
-    /*border-top-right-radius: 10px;*/
+    border-top-right-radius: 4px;
 }
 
+QListView#tabsList
+{
+    background-color: transparent;
+    margin-left: 0px;
+    margin-right: 5px;
+    margin-top:2px;
+/*    margin: 6px 5px 3px 5px;*/
+    border: none;
+    font-size: 15px;
+}
+
+QListView#tabsList::item
+{
+    background-color: rgb(186, 212, 221);
+    border-radius: 8px;
+    margin-right:2px;
+    margin-left:2px;
+    text-align: center;
+    color: rgb(49, 49, 49);
+}
+
+QListView#tabsList::item:selected
+{
+    background-color: rgb(208, 224, 230);
+    color: black;
+
+}
+
+/* Minimalist horizontal scrollbar for tabsList */
+QListView#tabsList QScrollBar:horizontal {
+    background: transparent;
+    padding-top: 1px;
+    height: 6px;
+}
+
+QListView#tabsList QScrollBar::handle:horizontal {
+    background: rgba(0, 0, 0, 0.26);
+    border-radius: 2px;
+    min-width: 20px;
+}
+
+QListView#tabsList QScrollBar::handle:horizontal:hover {
+    background: rgba(0, 0, 0, 0.356);
+}
+
+QListView#tabsList QScrollBar::add-line:horizontal,
+QListView#tabsList QScrollBar::sub-line:horizontal,
+QListView#tabsList QScrollBar::add-page:horizontal,
+QListView#tabsList QScrollBar::sub-page:horizontal {
+    background: none;
+    height: 0;
+    width: 0;
+}
+
+QListView#historyList
+{
+    background-color: transparent;
+    border: none;
+}
+
+QListView#historyList::item
+{
+    margin: 0 0 1 0;
+    text-align: left;
+    border: none;
+
+}
 
 
 #searchBar {
-    font-size: 18px;
-    margin: 5px 10px;
+    margin: 5px 0px 5px 10px;
     padding: 4px;
     border: 1px solid grey;
     border-radius: 8px;
-
+    background-color: rgba(0, 0, 0, 0.027);
+}
+#searchBar > QLineEdit {
+    background-color: transparent;
+    font-size: 18px;
+    margin:4px;
 }
 
+#searchBar > #bookmarkButton {
+    qproperty-iconSize: 20px 20px;
+    background-color: transparent;
+    border: none;
+    margin:0 5px;
+    border-radius: 14px;
+    padding: 6px;
+}
+
+#searchBar > #bookmarkButton:hover {
+    background-color: rgba(0, 0, 0, 0.089);
+}
+
+#searchBar > #bookmarkButton:pressed {
+    background-color: rgba(0, 0, 0, 0.289);
+}
+#bookmarkButton[toggled=true] {
+    qproperty-icon: url(:/assets/bm-filled.svg);
+}
+#bookmarkButton[toggled=false] {
+    qproperty-icon: url(:/assets/bm.svg);
+}
 
 QProgressBar {
     font-size: 1px;
@@ -103,7 +190,15 @@ QProgressBar::chunk
 }
 
 
-QStackedWidget{
-    margin: 0;
-    padding: 0;
+#browserMenu
+{
+    background-color: rgb(208, 224, 230);
+    border: 1px solid #3c4043;
+    padding: 6px;
+    color: black;
+    border-radius: 15px;
+}
+
+#browserMenu::selected {
+    background-color: rgba(0, 0, 0, 0.089);
 }

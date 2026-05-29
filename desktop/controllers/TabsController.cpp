@@ -1,7 +1,7 @@
 #include "TabsController.h"
 
-TabsController::TabsController(CoreAdapter *coreAdapter, TabsModel *tabsModel)
-    : _coreAdapter(coreAdapter), _tabsModel(tabsModel)
+TabsController::TabsController(CoreAdapter *coreAdapter, UIContext *ctx)
+    : _coreAdapter(coreAdapter), _ctx(ctx)
 {
     _setupEvents();
 }
@@ -17,7 +17,7 @@ void TabsController::_setupEvents()
     connect(_coreAdapter, &CoreAdapter::titleChanged, this, &TabsController::onTabTitleChanged);
     connect(_coreAdapter, &CoreAdapter::navigationRequested, this, &TabsController::onNavigationRequested);
 
-    connect(_tabsModel, &TabsModel::dataChanged, this, &TabsController::onTabsModelDataChanged);
+    connect(_ctx->getTabsModel(), &TabsModel::dataChanged, this, &TabsController::onTabsModelDataChanged);
     // connect(_coreAdapter, &CoreAdapter::tabsLoaded, this, &TabsController::onTabsLoaded);
 }
 
@@ -33,27 +33,27 @@ void TabsController::onNewTabClicked()
 void TabsController::onTabClicked(int index)
 {
     qDebug() << "\nTab with index " << index << " clicked";
-    auto tabId = _tabsModel->getTabIdByIndex(index);
+    auto tabId = _ctx->getTabsModel()->getTabIdByIndex(index);
     _coreAdapter->changeActiveTab(tabId);
 }
 
 
 void TabsController::onReloadClicked()
 {
-    qDebug() << "\nReloading tab " << _activeTabId.value;
-    _coreAdapter->reloadTab(_activeTabId);
+    qDebug() << "\nReloading tab " << _ctx->activeTabId().value;
+    _coreAdapter->reloadTab(_ctx->activeTabId());
 }
 
 void TabsController::onBackClicked()
 {
-    qDebug() << "\nGoing back in tab " << _activeTabId.value;
-    _coreAdapter->goBack(_activeTabId);
+    qDebug() << "\nGoing back in tab " << _ctx->activeTabId().value;
+    _coreAdapter->goBack(_ctx->activeTabId());
 }
 
 void TabsController::onForwardClicked()
 {
-    qDebug() << "\nGoing forward in tab " << _activeTabId.value;
-    _coreAdapter->goForward(_activeTabId);
+    qDebug() << "\nGoing forward in tab " << _ctx->activeTabId().value;
+    _coreAdapter->goForward(_ctx->activeTabId());
 }
 
 void TabsController::onSearchRequested(QString searchQuery)
@@ -61,7 +61,7 @@ void TabsController::onSearchRequested(QString searchQuery)
     // goToWebsite(_search->text());
     qDebug() << "\nSearch requested: " << searchQuery;
     // qDebug() << "\nSIZE = " << _core->urlVisited.handlersSize();
-    _coreAdapter->visitUrl(_activeTabId, searchQuery);
+    _coreAdapter->visitUrl(_ctx->activeTabId(), searchQuery);
 }
 
 // redirect
@@ -105,41 +105,40 @@ void TabsController::onLoadProgress(TabId id, int progress)
 void TabsController::onTabsLoaded(std::vector<TabInfo> tabs)
 {
     auto id = tabs.back().id;
-    _tabsModel->setInitialTabs(tabs);
+    _ctx->getTabsModel()->setInitialTabs(tabs);
     emit tabsLoaded(std::move(tabs));
-    
-    _coreAdapter->changeActiveTab(id);
+
 }
 
 void TabsController::onTabCreated(TabInfo tabInfo)
 {
-    _tabsModel->addTab(tabInfo);
-    _activeTabId = tabInfo.id;
+    _ctx->getTabsModel()->addTab(tabInfo);
     emit tabCreated(tabInfo);
 }
 
 void TabsController::onActiveTabChanged(TabId id)
 {
-    auto tabInfo = _tabsModel->getTabInfo(id);
-    _activeTabId = id;
+    auto tabInfo = _ctx->getTabsModel()->getTabInfo(id);
+    _ctx->setActiveTabId(id);
     qDebug() << "\nActive tab changed: " << id.value << " url: " << QString::fromStdString(tabInfo.url.toStdString());
-    emit activeTabChanged(tabInfo);
+    bool isBookmarked = _ctx->getBookmarkModel()->isBookmarked(tabInfo.url.toStdString());
+    emit activeTabChanged(tabInfo, isBookmarked);
 }
 
 void TabsController::onTabTitleChanged(TabTitleChangedArgs args)
 {
-    _tabsModel->updateTabTitle(args.id, args.newTitle);
+    _ctx->getTabsModel()->updateTabTitle(args.id, args.newTitle);
 }
 
 void TabsController::onLoadingStatusChanged(TabLoadingStatusChangedArgs args)
 {
-    _tabsModel->updateTabLoading(args.id, args.isLoading);
+    _ctx->getTabsModel()->updateTabLoading(args.id, args.isLoading);
 }
 
 void TabsController::onLoadingProgressChanged(TabLoadingProgressChangedArgs args)
 {
     // tabmodel doesn't store loading progress
-    if (args.id == _activeTabId)
+    if (args.id == _ctx->activeTabId())
     {
         emit activeTabLoadingProgressChanged(args.progress);
     }
@@ -149,25 +148,26 @@ void TabsController::onLoadingProgressChanged(TabLoadingProgressChangedArgs args
 void TabsController::onNavigationRequested(NavigationRequestedArgs args)
 {
     qDebug() << "\nNavigation requested for tab " << args.tabInfo.id.value << " with url " << QString::fromStdString(args.tabInfo.url.toStdString()) << " and navigation type " << static_cast<int>(args.type);
+    bool isBookmarked = _ctx->getBookmarkModel()->isBookmarked(args.tabInfo.url.toStdString());
     switch (args.type)
     {
     case NavigationType::NewPage:
-        _tabsModel->updateTabUrl(args.tabInfo.id, args.tabInfo.url);
-        _tabsModel->updateTabNavigation(args.tabInfo.id, args.tabInfo.canGoBack, args.tabInfo.canGoForward);
-        emit urlVisitRequested(args.tabInfo);
+        _ctx->getTabsModel()->updateTabUrl(args.tabInfo.id, args.tabInfo.url);
+        _ctx->getTabsModel()->updateTabNavigation(args.tabInfo.id, args.tabInfo.canGoBack, args.tabInfo.canGoForward);
+        emit urlVisitRequested(args.tabInfo, isBookmarked);
         break;
     case NavigationType::Back:
-        _tabsModel->updateTabNavigation(args.tabInfo.id, args.tabInfo.canGoBack, args.tabInfo.canGoForward);
-        emit backNavigationRequested(args.tabInfo);
+        _ctx->getTabsModel()->updateTabNavigation(args.tabInfo.id, args.tabInfo.canGoBack, args.tabInfo.canGoForward);
+        emit backNavigationRequested(args.tabInfo, isBookmarked);
         break;
     case NavigationType::Forward:
-        _tabsModel->updateTabNavigation(args.tabInfo.id, args.tabInfo.canGoBack, args.tabInfo.canGoForward);
-        emit forwardNavigationRequested(args.tabInfo);
+        _ctx->getTabsModel()->updateTabNavigation(args.tabInfo.id, args.tabInfo.canGoBack, args.tabInfo.canGoForward);
+        emit forwardNavigationRequested(args.tabInfo, isBookmarked);
         break;
 
     case NavigationType::Redirect:
-        _tabsModel->updateTabUrl(args.tabInfo.id, args.tabInfo.url);
-        _tabsModel->updateTabNavigation(args.tabInfo.id, args.tabInfo.canGoBack, args.tabInfo.canGoForward);
+        _ctx->getTabsModel()->updateTabUrl(args.tabInfo.id, args.tabInfo.url);
+        _ctx->getTabsModel()->updateTabNavigation(args.tabInfo.id, args.tabInfo.canGoBack, args.tabInfo.canGoForward);
         // redirected(CoreAdapter::convert(args.tabInfo.url));
         // _tabBar->updateTabNavigation(_activeTabId, args.tabInfo.canGoBack, args.tabInfo.canGoForward);
         break;
@@ -182,26 +182,26 @@ void TabsController::onTabsModelDataChanged(const QModelIndex &topLeft,
                                             const QModelIndex &bottomRight,
                                             const QList<int> &roles)
 {
-    if (topLeft.row() != _tabsModel->getTabIndex(_activeTabId))
+    if (topLeft.row() != _ctx->getTabsModel()->getTabIndex(_ctx->activeTabId()))
     {
         return;
     }
     if (roles.contains(TabsModel::Roles::UrlRole))
     {
-        emit activeTabUrlChanged(_tabsModel->index(topLeft.row(), 0).data(TabsModel::UrlRole).toUrl());
+        emit activeTabUrlChanged(_ctx->getTabsModel()->index(topLeft.row(), 0).data(TabsModel::UrlRole).toUrl());
     }
     if (roles.contains(TabsModel::Roles::IsLoadingRole))
     {
-        emit activeTabLoadingStatusChanged(_tabsModel->index(topLeft.row(), 0).data(TabsModel::IsLoadingRole).toBool());
+        emit activeTabLoadingStatusChanged(_ctx->getTabsModel()->index(topLeft.row(), 0).data(TabsModel::IsLoadingRole).toBool());
     }
 
     if (roles.contains(TabsModel::Roles::BackNavigatingRole))
     {
-        emit backNavigationAvailabilityChanged(_tabsModel->index(topLeft.row(), 0).data(TabsModel::BackNavigatingRole).toBool());
+        emit backNavigationAvailabilityChanged(_ctx->getTabsModel()->index(topLeft.row(), 0).data(TabsModel::BackNavigatingRole).toBool());
     }
 
     if (roles.contains(TabsModel::Roles::ForwardNavigatingRole))
     {
-        emit forwardNavigationAvailabilityChanged(_tabsModel->index(topLeft.row(), 0).data(TabsModel::ForwardNavigatingRole).toBool());
+        emit forwardNavigationAvailabilityChanged(_ctx->getTabsModel()->index(topLeft.row(), 0).data(TabsModel::ForwardNavigatingRole).toBool());
     }
 }

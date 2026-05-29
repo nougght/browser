@@ -19,7 +19,6 @@ set(PROJECT_SOURCES
         main.cpp
         ui/mainwindow.cpp
         ui/mainwindow.h
-        ui/style.css
         ui/tabbarwithcontrol.h
         ui/tabbarwithcontrol.cpp
 
@@ -33,12 +32,20 @@ set(PROJECT_SOURCES
         controllers/HistoryController.h
         controllers/HistoryController.cpp
 
-        controllers/BookmarksController.h
+        controllers/BookmarkController.h
 
         models/tabsmodel.h
         models/tabsmodel.cpp
 
         binder/AppBinder.h
+        resources.qrc
+        ui/browsermenu.h ui/browsermenu.cpp
+        ui/historypage.h ui/historypage.cpp
+        models/historymodel.h models/historymodel.cpp
+        models/bookmarkmodel.h models/bookmarkmodel.cpp
+        ui/searchbar.h ui/searchbar.cpp
+        controllers/BookmarkController.cpp
+        ui/bookmarkspage.h ui/bookmarkspage.cpp
 
         ${TS_FILES}
 )
@@ -48,12 +55,9 @@ if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
 qt_add_executable(desktop
         MANUAL_FINALIZATION
         ${PROJECT_SOURCES}
+        models/UIContext.h models/UIContext.cpp
 
-        resources.qrc
-        ui/test.ui
-        ui/browsermenu.h ui/browsermenu.cpp
-        ui/historypage.h ui/historypage.cpp
-        models/historymodel.h models/historymodel.cpp
+
     )
 
 

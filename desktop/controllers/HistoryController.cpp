@@ -1,8 +1,8 @@
 #include "HistoryController.h"
 
 HistoryController::HistoryController(CoreAdapter *coreAdapter,
-                                     HistoryModel *model)
-    : _coreAdapter(coreAdapter), _historyModel(model) {
+                                     UIContext *ctx)
+    : _coreAdapter(coreAdapter), _ctx(ctx) {
     _setupEvents();
 }
 
@@ -16,13 +16,13 @@ void HistoryController::_setupEvents() {
 
 void HistoryController::onHistoryLoaded(std::vector<HistoryEntry> history) {
     qDebug() << "\n history controller history loaded\n";
-    _historyModel->addEntries(history);
+    _ctx->getHistoryModel()->addEntries(history);
     emit historyLoaded(std::move(history));
 }
 
 void HistoryController::onEntryAdded(HistoryEntry entry)
 {
     qDebug() << "\n history controller entry added\n";
-    _historyModel->addEntry(entry);
+    _ctx->getHistoryModel()->addEntry(entry);
     emit entryAdded(entry);
 }

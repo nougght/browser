@@ -6,7 +6,7 @@ CREATE TABLE IF NOT EXISTS history (
 
 CREATE TABLE IF NOT EXISTS bookmarks (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
-            url TEXT,
+            url TEXT UNIQUE,
             title TEXT,
             folder_id INTEGER,
             created_at INTEGER);

@@ -15,9 +15,12 @@
 #include "domain/Tab.h"
 #include "storage/DatabaseManager.h"
 #include "storage/repositories/HistoryRepository.h"
+#include "storage/repositories/BookmarkRepository.h"
 #include "services/history/HistoryService.h"
+#include "services/bookmarks/BookmarkService.h"
 #include "services/tabs/TabManager.h"
 
+// TODO: add BrowserContext
 
 // ядро браузера с встроенным циклом событий(event loop)
 class BrowserCore : public IBrowserCore {
@@ -44,10 +47,13 @@ private:
 
     std::unique_ptr<DatabaseManager> _dbManager;
     std::unique_ptr<HistoryRepository> _historyRepo;
+    std::unique_ptr<BookmarkRepository> _bookmarkRepo;
     // отдельные сервисы ядра
     std::unique_ptr<TabManager> _tabManager;
 
     std::unique_ptr<HistoryService> _historyService;
+
+    std::unique_ptr<BookmarkService> _bookmarkService;
 
     // (временно) список подписок на события из сервисов
     std::vector<std::unique_ptr<ISubscription>> _subs;
@@ -76,6 +82,10 @@ public:
     void reloadTab(TabId id) override;
 
     void loadHistory() override;
+
+    void loadBookmarks() override;
+    void switchActiveTabBookmark() override;
+    void deleteBookmark(int64_t id) override;
 
     // прямые геттеры в основном классе не используются, вместо них - события
     // т.к. ядро в отдельном потоке

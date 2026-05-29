@@ -15,8 +15,10 @@ class MainWindowController : public QObject
 public:
     MainWindowController(CoreAdapter *coreAdapter);
     void onHistoryClicked();
+    void onBookmarksClicked();
 signals:
     void historyPageRequested();
+    void bookmarksPageRequested();
 private:
     void _setupEvents();
 

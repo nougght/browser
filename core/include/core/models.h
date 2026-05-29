@@ -23,4 +23,10 @@ struct HistoryEntry {
     int64_t timestamp;
 };
 
+struct Bookmark {
+    int64_t id;
+    std::string url;
+    std::string title;
+};
+
 #endif
