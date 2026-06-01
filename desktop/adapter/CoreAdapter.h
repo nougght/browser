@@ -33,6 +33,8 @@ public:
 signals:
     void tabsLoaded(std::vector<TabInfo> tabs);
     void tabCreated(TabInfo tab);
+    void tabClosed(TabId id);
+    void lastTabClosed();
     void activeTabChanged(TabId id);
     void navigationRequested(NavigationRequestedArgs args);
     void titleChanged(TabTitleChangedArgs args);
@@ -45,6 +47,7 @@ signals:
     void bookmarksLoaded(std::vector<Bookmark> bookmarks);
     void bookmarkAdded(Bookmark bookmark);
     void bookmarkDeleted(size_t ind);
+
 public slots:
     void loadTabs();
     void createTab(QUrl url);

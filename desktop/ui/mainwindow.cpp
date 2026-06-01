@@ -19,9 +19,20 @@ QUrl convert(Url url) {
 MainWindow::MainWindow(QAbstractListModel *tabsModel,
                        QAbstractListModel *historyModel,
                        QAbstractListModel *bookmarksModel) {
+    setAttribute(Qt::WA_DeleteOnClose);
     setupUI(tabsModel, historyModel, bookmarksModel);
     setupEvents();
     qDebug() << QWebEngineProfile::defaultProfile()->httpUserAgent();
+}
+
+MainWindow::~MainWindow()
+{
+    // for (auto e : _tabWidgets) {
+    //     e.second->deleteLater();
+    // }
+    // _tabWidgets.clear();
+    // _profile->deleteLater();
+    qDebug() << "main window destroyed";
 }
 
 void MainWindow::setupUI(QAbstractListModel *tabsModel,
@@ -38,6 +49,11 @@ void MainWindow::setupUI(QAbstractListModel *tabsModel,
     _centralLayout->setContentsMargins(0, 0, 0, 0);
 
     _rootLayout->addWidget(_centralWidget);
+
+    _profile = new QWebEngineProfile();
+    connect(_profile, &QObject::destroyed, []{
+        qDebug() << "profile destroyed";
+    });
 
     _tabBar = new TabBarWithControl(_centralWidget, tabsModel);
     _menu = new BrowserMenu();
@@ -109,6 +125,7 @@ void MainWindow::setupUI(QAbstractListModel *tabsModel,
     // TODO: for native gestures try https://github.com/stdware/qwindowkit
     this->setWindowFlags(Qt::WindowFlags::enum_type::FramelessWindowHint);
     this->setAttribute(Qt::WA_TranslucentBackground);
+
 }
 
 // setup ui signals
@@ -128,6 +145,8 @@ void MainWindow::setupEvents() {
             [this] { emit newTabClicked(); });
     connect(_tabBar, &TabBarWithControl::tabClicked, this,
             [this](int index) { emit tabClicked(index); });
+    connect(_tabBar, &TabBarWithControl::tabCloseClicked, this,
+            [this](int index) { emit closeTabClicked(index); });
 
     connect(_reloadButton, &QPushButton::clicked, this,
             [this] { emit reloadClicked(); });
@@ -170,6 +189,13 @@ void MainWindow::setupTabViewEvents(TabId tabId, QWebEngineView *tabView) {
     connect(
         tabView, &QWebEngineView::loadProgress, this,
         [this, id = tabId](int progress) { emit loadProgress(id, progress); });
+
+    connect(tabView, &QObject::destroyed, []{
+        qDebug() << "view destroyed";
+    });
+    connect(tabView->page(), &QObject::destroyed, [] {
+        qDebug() << "page destroyed";
+    });
 }
 
 void MainWindow::visitUrl(TabInfo tab, bool isBookmarked) {
@@ -206,6 +232,8 @@ void MainWindow::navigateForward(TabInfo tabInfo, bool isBookmarked) {
 void MainWindow::addTabs(std::vector<TabInfo> tabs) {
     for (int i = 0; i < tabs.size(); ++i) {
         auto tabWidget = new QWebEngineView();
+        auto page = new QWebEnginePage(_profile, tabWidget);
+        tabWidget->setPage(page);
 
         _stackedWidget->addWidget(tabWidget);
 
@@ -222,7 +250,7 @@ void MainWindow::addTabs(std::vector<TabInfo> tabs) {
 void MainWindow::addTab(TabInfo tabInfo) {
     // _tabBar->addTab(tabInfo);
 
-    auto tabWidget = new QWebEngineView();
+    auto tabWidget = new QWebEngineView(this);
 
     _stackedWidget->addWidget(tabWidget);
 
@@ -231,6 +259,17 @@ void MainWindow::addTab(TabInfo tabInfo) {
     _tabWidgets[tabInfo.id] = std::move(tabWidget);
 
 }
+
+void MainWindow::closeTab(TabId id) {
+    if (_tabWidgets.count(id) == 0)
+        return;
+
+    auto tab = _tabWidgets[id];
+    _stackedWidget->removeWidget(tab);
+    _tabWidgets.erase(id);
+    tab->deleteLater();
+}
+
 
 // switch active tab
 void MainWindow::switchToTab(TabInfo tabInfo, bool isBookmarked) {
@@ -245,7 +284,7 @@ void MainWindow::switchToTab(TabInfo tabInfo, bool isBookmarked) {
         _forwardButton->setEnabled(tabInfo.canGoForward);
 
         switchActiveTabBookmark(isBookmarked);
-        QTimer::singleShot(10, this, [=]() {
+        QTimer::singleShot(1, this, [=]() {
             QMetaObject::invokeMethod(
                 this,
                 [=]() {
@@ -295,4 +334,3 @@ void MainWindow::switchActiveTabBookmark(bool isBookmarked) {
     _search->switchBookmark(isBookmarked);
 }
 
-MainWindow::~MainWindow() {}

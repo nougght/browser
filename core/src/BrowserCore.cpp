@@ -32,6 +32,10 @@ BrowserCore::BrowserCore()
             std::make_unique<Subscription<TabId>>(_tabManager->tabClosed.subscribe(
                 [this](TabId id) { tabClosed.invoke(id); })));
 
+        _subs.push_back(
+            std::make_unique<Subscription<void>>(_tabManager->lastTabClosed.subscribe(
+                [this]() { lastTabClosed.invoke(); })));
+
         _subs.push_back(std::make_unique<Subscription<NavigationRequestedArgs>>(
             _tabManager->navigationRequested.subscribe(
                 [this](NavigationRequestedArgs args) {

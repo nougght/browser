@@ -34,6 +34,7 @@ signals:
 
     void newTabClicked();
     void tabClicked(int index);
+    void closeTabClicked(int index);
     void reloadClicked();
     void backClicked();
     void forwardClicked();
@@ -54,6 +55,7 @@ public slots:
 
     void addTabs(std::vector<TabInfo> tabs);
     void addTab(TabInfo tabInfo);
+    void closeTab(TabId id);
     void switchToTab(TabInfo tabInfo, bool isBookmarked);
 
     void setLoadingBarVisible(bool isVisible);
@@ -99,6 +101,8 @@ private:
     BrowserMenu *_menu;
     HistoryPage *_historyPage;
     BookmarksPage *_bookmarksPage;
+
+    QWebEngineProfile* _profile;
     QStackedWidget *_stackedWidget;
 
     std::map<TabId, QWebEngineView *> _tabWidgets;

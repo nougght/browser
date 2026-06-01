@@ -11,6 +11,8 @@ void TabsController::_setupEvents()
 
     connect(_coreAdapter, &CoreAdapter::tabsLoaded, this, &TabsController::onTabsLoaded);
     connect(_coreAdapter, &CoreAdapter::tabCreated, this, &TabsController::onTabCreated);
+    connect(_coreAdapter, &CoreAdapter::tabClosed, this, &TabsController::onTabClosed);
+    connect(_coreAdapter, &CoreAdapter::lastTabClosed, this, &TabsController::lastTabClosed);
     connect(_coreAdapter, &CoreAdapter::activeTabChanged, this, &TabsController::onActiveTabChanged);
     connect(_coreAdapter, &CoreAdapter::loadingStatusChanged, this, &TabsController::onLoadingStatusChanged);
     connect(_coreAdapter, &CoreAdapter::loadingProgressChanged, this, &TabsController::onLoadingProgressChanged);
@@ -37,6 +39,12 @@ void TabsController::onTabClicked(int index)
     _coreAdapter->changeActiveTab(tabId);
 }
 
+void TabsController::onCloseTabClicked(int index)
+{
+    qDebug() << "\nTab with index " << index << " close clicked";
+    auto tabId = _ctx->getTabsModel()->getTabIdByIndex(index);
+    _coreAdapter->closeTab(tabId);
+}
 
 void TabsController::onReloadClicked()
 {
@@ -107,13 +115,24 @@ void TabsController::onTabsLoaded(std::vector<TabInfo> tabs)
     auto id = tabs.back().id;
     _ctx->getTabsModel()->setInitialTabs(tabs);
     emit tabsLoaded(std::move(tabs));
-
 }
 
 void TabsController::onTabCreated(TabInfo tabInfo)
 {
     _ctx->getTabsModel()->addTab(tabInfo);
     emit tabCreated(tabInfo);
+}
+
+
+void TabsController::onTabClosed(TabId id)
+{
+    _ctx->getTabsModel()->removeTab(id);
+    emit tabClosed(id);
+}
+
+void TabsController::onLastTabClosed()
+{
+    emit lastTabClosed();
 }
 
 void TabsController::onActiveTabChanged(TabId id)

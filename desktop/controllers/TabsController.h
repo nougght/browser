@@ -15,6 +15,8 @@ public:
     // slots for core signals
     void onTabsLoaded(std::vector<TabInfo>);
     void onTabCreated(TabInfo tabInfo);
+    void onTabClosed(TabId id);
+    void onLastTabClosed();
     void onActiveTabChanged(TabId id);
     void onNavigationRequested(NavigationRequestedArgs args);
     void onTabTitleChanged(TabTitleChangedArgs args);
@@ -37,6 +39,7 @@ public:
     void onLoadProgress(TabId id, int progress);
     void onNewTabClicked();
     void onTabClicked(int index);
+    void onCloseTabClicked(int index);
     void onReloadClicked();
     void onBackClicked();
     void onForwardClicked();
@@ -53,6 +56,8 @@ signals:
 
     void tabsLoaded(std::vector<TabInfo> tabs);
     void tabCreated(TabInfo tabInfo);
+    void tabClosed(TabId id);
+    void lastTabClosed();
     void activeTabChanged(TabInfo tabInfo, bool isBookmarked);
     void activeTabLoadingStatusChanged(bool isLoading);
     void activeTabLoadingProgressChanged(int progress);

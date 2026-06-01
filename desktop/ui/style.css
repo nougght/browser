@@ -12,6 +12,10 @@ QStackedWidget{
     padding: 0;
 }
 
+QPushButton{
+    background-color: transparent;
+}
+
 #tabView {
 
 }
@@ -67,6 +71,9 @@ QStackedWidget{
     border-top-right-radius: 4px;
 }
 
+#tabBar {
+    background-color:red;
+    }
 QListView#tabsList
 {
     background-color: transparent;

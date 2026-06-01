@@ -56,6 +56,8 @@ qt_add_executable(desktop
         MANUAL_FINALIZATION
         ${PROJECT_SOURCES}
         models/UIContext.h models/UIContext.cpp
+        ui/tabdelegate.h ui/tabdelegate.cpp
+
 
 
     )

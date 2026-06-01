@@ -6,98 +6,99 @@
 // binds controller and ui signals
 class AppBinder {
 public:
-    AppBinder(MainWindow *mainWindow, MainWindowController *mainControler,
+    AppBinder(MainWindow *mainWindow, MainWindowController *mainController,
               TabsController *tabsController,
               BookmarkController *bookmarkController)
-        : _mainWindow(mainWindow), _mainController(mainControler),
-        _tabsController(tabsController),
-        _bookmarkController(bookmarkController) {
+         {
 
-        QObject::connect(_tabsController, &TabsController::urlVisitRequested,
-                         _mainWindow, &MainWindow::visitUrl);
-        QObject::connect(_tabsController, &TabsController::backNavigationRequested,
-                         _mainWindow, &MainWindow::navigateBack);
-        QObject::connect(_tabsController,
-                         &TabsController::forwardNavigationRequested, _mainWindow,
+        QObject::connect(tabsController, &TabsController::urlVisitRequested,
+                         mainWindow, &MainWindow::visitUrl);
+        QObject::connect(tabsController, &TabsController::backNavigationRequested,
+                         mainWindow, &MainWindow::navigateBack);
+        QObject::connect(tabsController,
+                         &TabsController::forwardNavigationRequested, mainWindow,
                          &MainWindow::navigateForward);
-        QObject::connect(_tabsController, &TabsController::reloadRequested,
-                         _mainWindow, &MainWindow::reloadTab);
+        QObject::connect(tabsController, &TabsController::reloadRequested,
+                         mainWindow, &MainWindow::reloadTab);
 
-        QObject::connect(_tabsController, &TabsController::tabsLoaded, _mainWindow,
+        QObject::connect(tabsController, &TabsController::tabsLoaded, mainWindow,
                          &MainWindow::addTabs);
-        QObject::connect(_tabsController, &TabsController::tabCreated, _mainWindow,
+        QObject::connect(tabsController, &TabsController::tabCreated, mainWindow,
                          &MainWindow::addTab);
-        QObject::connect(_tabsController, &TabsController::activeTabChanged,
-                         _mainWindow, &MainWindow::switchToTab);
+        QObject::connect(tabsController, &TabsController::tabClosed, mainWindow,
+                         &MainWindow::closeTab);
+        QObject::connect(tabsController, &TabsController::lastTabClosed, mainWindow,
+                         &MainWindow::close);
 
-        QObject::connect(_tabsController, &TabsController::activeTabUrlChanged,
-                         _mainWindow, &MainWindow::updateUrlBar);
-        QObject::connect(_tabsController,
+        QObject::connect(tabsController, &TabsController::activeTabChanged,
+                         mainWindow, &MainWindow::switchToTab);
+
+        QObject::connect(tabsController, &TabsController::activeTabUrlChanged,
+                         mainWindow, &MainWindow::updateUrlBar);
+        QObject::connect(tabsController,
                          &TabsController::activeTabLoadingStatusChanged,
-                         _mainWindow, &MainWindow::setLoadingBarVisible);
-        QObject::connect(_tabsController,
+                         mainWindow, &MainWindow::setLoadingBarVisible);
+        QObject::connect(tabsController,
                          &TabsController::activeTabLoadingProgressChanged,
-                         _mainWindow, &MainWindow::setLoadingProgress);
-        QObject::connect(_tabsController,
+                         mainWindow, &MainWindow::setLoadingProgress);
+        QObject::connect(tabsController,
                          &TabsController::backNavigationAvailabilityChanged,
-                         _mainWindow, &MainWindow::setBackButtonEnabled);
-        QObject::connect(_tabsController,
+                         mainWindow, &MainWindow::setBackButtonEnabled);
+        QObject::connect(tabsController,
                          &TabsController::forwardNavigationAvailabilityChanged,
-                         _mainWindow, &MainWindow::setForwardButtonEnabled);
+                         mainWindow, &MainWindow::setForwardButtonEnabled);
 
 
 
 
-        QObject::connect(_bookmarkController, &BookmarkController::switchActiveTabBookmark,
-                         _mainWindow, &MainWindow::switchActiveTabBookmark);
+        QObject::connect(bookmarkController, &BookmarkController::switchActiveTabBookmark,
+                         mainWindow, &MainWindow::switchActiveTabBookmark);
 
 
 
-        QObject::connect(_mainController,
-                         &MainWindowController::historyPageRequested, _mainWindow,
+        QObject::connect(mainController,
+                         &MainWindowController::historyPageRequested, mainWindow,
                          &MainWindow::showHistoryPage);
-        QObject::connect(_mainController,
-                         &MainWindowController::bookmarksPageRequested, _mainWindow,
+        QObject::connect(mainController,
+                         &MainWindowController::bookmarksPageRequested, mainWindow,
                          &MainWindow::showBookmarksPage);
 
 
 
-        QObject::connect(_mainWindow, &MainWindow::newTabClicked, _tabsController,
+        QObject::connect(mainWindow, &MainWindow::newTabClicked, tabsController,
                          &TabsController::onNewTabClicked);
-        QObject::connect(_mainWindow, &MainWindow::tabClicked, _tabsController,
+        QObject::connect(mainWindow, &MainWindow::tabClicked, tabsController,
                          &TabsController::onTabClicked);
-        QObject::connect(_mainWindow, &MainWindow::reloadClicked, _tabsController,
+        QObject::connect(mainWindow, &MainWindow::reloadClicked, tabsController,
                          &TabsController::onReloadClicked);
-        QObject::connect(_mainWindow, &MainWindow::backClicked, _tabsController,
+        QObject::connect(mainWindow, &MainWindow::backClicked, tabsController,
                          &TabsController::onBackClicked);
-        QObject::connect(_mainWindow, &MainWindow::forwardClicked, _tabsController,
+        QObject::connect(mainWindow, &MainWindow::forwardClicked, tabsController,
                          &TabsController::onForwardClicked);
-        QObject::connect(_mainWindow, &MainWindow::searchClicked, _tabsController,
+        QObject::connect(mainWindow, &MainWindow::searchClicked, tabsController,
                          &TabsController::onSearchRequested);
-        QObject::connect(_mainWindow, &MainWindow::engineUrlChanged,
-                         _tabsController, &TabsController::onEngineUrlChanged);
-        QObject::connect(_mainWindow, &MainWindow::engineTitleChanged,
-                         _tabsController, &TabsController::onEngineTitleChanged);
-        QObject::connect(_mainWindow, &MainWindow::loadStarted, _tabsController,
+        QObject::connect(mainWindow, &MainWindow::engineUrlChanged,
+                         tabsController, &TabsController::onEngineUrlChanged);
+        QObject::connect(mainWindow, &MainWindow::engineTitleChanged,
+                         tabsController, &TabsController::onEngineTitleChanged);
+        QObject::connect(mainWindow, &MainWindow::loadStarted, tabsController,
                          &TabsController::onLoadStarted);
-        QObject::connect(_mainWindow, &MainWindow::loadFinished, _tabsController,
+        QObject::connect(mainWindow, &MainWindow::loadFinished, tabsController,
                          &TabsController::onLoadFinished);
-        QObject::connect(_mainWindow, &MainWindow::loadProgress, _tabsController,
+        QObject::connect(mainWindow, &MainWindow::loadProgress, tabsController,
                          &TabsController::onLoadProgress);
+        QObject::connect(mainWindow, &MainWindow::closeTabClicked, tabsController,
+                         &TabsController::onCloseTabClicked);
 
-        QObject::connect(_mainWindow, &MainWindow::historyClicked, _mainController,
+        QObject::connect(mainWindow, &MainWindow::historyClicked, mainController,
                          &MainWindowController::onHistoryClicked);
-
-        QObject::connect(_mainWindow, &MainWindow::bookmarkToggled, _bookmarkController,
-                         &BookmarkController::onActiveTabBookmakToggled);
-        QObject::connect(_mainWindow, &MainWindow::bookmarksClicked,
-                         _mainController,
+        QObject::connect(mainWindow, &MainWindow::bookmarksClicked,
+                         mainController,
                          &MainWindowController::onBookmarksClicked);
+
+
+        QObject::connect(mainWindow, &MainWindow::bookmarkToggled, bookmarkController,
+                         &BookmarkController::onActiveTabBookmakToggled);
     }
 
-private:
-    MainWindow *_mainWindow;
-    MainWindowController *_mainController;
-    TabsController *_tabsController;
-    BookmarkController *_bookmarkController;
 };
