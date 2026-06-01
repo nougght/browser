@@ -11,7 +11,8 @@ public:
     enum Roles {UrlRole = Qt::UserRole + 1,
                  BackNavigatingRole,
                  ForwardNavigatingRole,
-                 IsLoadingRole};
+                 IsLoadingRole,
+                 IsActiveRole};
     explicit TabsModel(QObject *parent = nullptr);
 
     int rowCount(const QModelIndex &parent = QModelIndex()) const override
@@ -21,6 +22,7 @@ public:
 
     QVariant data(const QModelIndex &index, int role = Qt::DisplayRole) const override;
     void addTab(const TabInfo &tab);
+    void removeTab(TabId id);
     void updateTabTitle(TabId id, std::string title);
     void updateTabUrl(TabId id, Url url);
     void updateTabLoading(TabId id, bool isLoading);
@@ -34,13 +36,17 @@ public:
     }
 
     int getTabIndex(TabId id);
+    void setActiveTabId(TabId id) {_activeTabId = id;}
+    TabId getActiveTabId() {return _activeTabId;}
     TabInfo getTabInfo(TabId id);
 
 signals:
     void tabAdded(QModelIndex *index);
-private:
 
+private:
     std::vector<TabInfo> _tabs;
+    std::unordered_map<TabId, size_t> _idIndex;
+    TabId _activeTabId;
 };
 
 #endif // TABSMODEL_H

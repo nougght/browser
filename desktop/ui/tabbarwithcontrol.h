@@ -30,18 +30,19 @@ public:
     void setTabSelected(int ind);
 
 
-
 signals:
     void closeClicked();
     void minimiseClicked();
     void newTabClicked();
     void tabClicked(int index);
+    void tabCloseClicked(int index);
     void barDoubleClicked();
 private:
     void setupUI();
     void mouseDoubleClickEvent(QMouseEvent *event) override;
 
 
+    void onTabCloseClicked(const QModelIndex &index);
     void onTabClicked(const QModelIndex &index);
     QAbstractListModel * _tabsModel;
 

@@ -16,14 +16,14 @@ public:
     BookmarkModel *getBookmarkModel();
     HistoryModel *getHistoryModel();
 
-    TabId activeTabId(){return _activeTabId;}
-    void setActiveTabId(TabId id) {_activeTabId = id;}
+    TabId activeTabId(){return _tabsModel->getActiveTabId();}
+    void setActiveTabId(TabId id) {_tabsModel->setActiveTabId(id);}
 
     std::string activeTabURL(){
-        return _tabsModel->getTabInfo(_activeTabId).url.toStdString();
+        return _tabsModel->getTabInfo(_tabsModel->getActiveTabId()).url.toStdString();
     }
+
 private:
-    TabId _activeTabId;
     TabsModel *_tabsModel;
     BookmarkModel *_bookmarkModel;
     HistoryModel *_historyModel;
