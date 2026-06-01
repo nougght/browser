@@ -19,6 +19,20 @@ void CoreAdapter::_setupEvents() {
         })));
 
     _subscriptions.push_back(std::make_unique<Subscription<TabId>>(
+        _core->tabClosed.subscribe([this](auto id) {
+            QMetaObject::invokeMethod(
+                this, [this, id]() { emit this->tabClosed(id); },
+                Qt::QueuedConnection);
+        })));
+
+    _subscriptions.push_back(std::make_unique<Subscription<void>>(
+        _core->lastTabClosed.subscribe([this]() {
+            QMetaObject::invokeMethod(
+                this, [this]() { emit this->lastTabClosed(); },
+                Qt::QueuedConnection);
+        })));
+
+    _subscriptions.push_back(std::make_unique<Subscription<TabId>>(
         _core->activeTabChanged.subscribe([this](TabId id) {
             QMetaObject::invokeMethod(
                 this, [this, id]() { emit this->activeTabChanged(id); },
