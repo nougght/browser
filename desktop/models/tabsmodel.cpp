@@ -26,6 +26,16 @@ QVariant TabsModel::data(const QModelIndex &index, int role) const {
     return QVariant();
 }
 
+void TabsModel::setInitialTabs(std::vector<TabInfo> tabs) {
+    beginResetModel();
+    // присваиваем без копирования
+    _tabs = std::move(tabs);
+    for (auto i = 0; i < _tabs.size(); ++i){
+        _idIndex[_tabs[i].id] = i;
+    }
+    endResetModel();
+}
+
 void TabsModel::addTab(const TabInfo &tab) {
     beginInsertRows(QModelIndex(), _tabs.size(), _tabs.size());
     _tabs.push_back(tab);
@@ -37,19 +47,36 @@ void TabsModel::addTab(const TabInfo &tab) {
 
 void TabsModel::removeTab(TabId id) {
     int ind = getTabIndex(id);
+    if (ind == -1)
+        qDebug() << "removeTab tab not found: " << id.value;
+        return;
     beginRemoveRows(QModelIndex(), ind, ind);
-    _idIndex.erase(id);
-    _tabs.erase(_tabs.begin() + ind);
+    _deleteWithIndexUpdate(id, ind);
     endRemoveRows();
 }
 
 
-int TabsModel::getTabIndex(TabId id) { return _idIndex[id]; }
+int TabsModel::getTabIndex(TabId id) {
+    auto it = _idIndex.find(id);
+    if (it == _idIndex.end())
+        return -1;
+    return it->second;
+}
+
+void TabsModel::_deleteWithIndexUpdate(TabId id, size_t ind) {
+    _idIndex.erase(id);
+    _tabs.erase(_tabs.begin() + ind);
+    for (auto i = ind; i < _tabs.size(); ++i)
+    {
+        _idIndex[_tabs[i].id] = i;
+    }
+}
 
 void TabsModel::updateTabUrl(TabId id, Url url) {
     int ind = getTabIndex(id);
 
     if (ind == -1)
+        qDebug() << "updateTabUrl tab not found: " << id.value;
         return;
     _tabs[ind].url = url;
     emit dataChanged(index(ind), index(ind), {UrlRole});
@@ -59,6 +86,7 @@ void TabsModel::updateTabTitle(TabId id, std::string title) {
     int ind = getTabIndex(id);
 
     if (ind == -1)
+        qDebug() << "updateTabTitle tab not found: " << id.value;
         return;
     _tabs[ind].title = title;
     emit dataChanged(index(ind), index(ind), {Qt::DisplayRole});
@@ -68,6 +96,7 @@ void TabsModel::updateTabLoading(TabId id, bool isLoading) {
     int ind = getTabIndex(id);
 
     if (ind == -1)
+        qDebug() << "updateTabLoading tab not found: " << id.value;
         return;
     _tabs[ind].isLoading = isLoading;
     emit dataChanged(index(ind), index(ind), {IsLoadingRole});
@@ -78,6 +107,7 @@ void TabsModel::updateTabNavigation(TabId id, bool canGoBack,
     int ind = getTabIndex(id);
 
     if (ind == -1)
+        qDebug() << "updateTabNavigation tab not found: " << id.value;
         return;
     _tabs[ind].canGoBack = canGoBack;
     _tabs[ind].canGoForward = canGoForward;
@@ -85,16 +115,11 @@ void TabsModel::updateTabNavigation(TabId id, bool canGoBack,
                      {BackNavigatingRole, ForwardNavigatingRole});
 }
 
-void TabsModel::setInitialTabs(std::vector<TabInfo> tabs) {
-    beginResetModel();
-    // присваиваем без копирования
-    _tabs = std::move(tabs);
-    endResetModel();
-}
 
 TabInfo TabsModel::getTabInfo(TabId id) {
     int ind = getTabIndex(id);
     if (ind == -1)
+        // TODO: error handling
         throw std::runtime_error("Tab with id " + std::to_string(id.value) +
                                  " not found");
     return _tabs[ind];

@@ -30,7 +30,7 @@ TabId TabManager::createTab() { return createTab(_initialTabUrl); }
 
 void TabManager::closeTab(TabId id) {
     auto it = std::find(_tabsOrder.begin(), _tabsOrder.end(), id);
-    if (it != _tabsOrder.end() && _activeTabId == id) {
+    if (it != _tabsOrder.end()) {
         if (_tabs.size() == 1) {
             // закрытие последней вкладки
             lastTabClosed.invoke();
