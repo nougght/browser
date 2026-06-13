@@ -44,6 +44,7 @@ signals:
     void tabAdded(QModelIndex *index);
 
 private:
+    void _deleteWithIndexUpdate(TabId id, size_t ind);
     std::vector<TabInfo> _tabs;
     std::unordered_map<TabId, size_t> _idIndex;
     TabId _activeTabId;
