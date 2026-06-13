@@ -47,18 +47,17 @@ bool TabDelegate::editorEvent(QEvent *event, QAbstractItemModel *model,
                               const QModelIndex &index) {
     if (event->type() == QEvent::MouseButtonRelease) {
         auto *mouse = static_cast<QMouseEvent *>(event);
-        auto isActive = model->data(index, TabsModel::IsActiveRole).toBool();
         QRect closeRect = option.rect.adjusted(72, 4, -8, -4);
+        auto isActive = model->data(index, TabsModel::IsActiveRole).toBool();
 
-        qDebug() << "tab click " << mouse->pos();
-        if (closeRect.contains(mouse->pos()) && isActive) {
+        qDebug() << "tab click " << mouse->pos() << " isActive: " << isActive;
+        if (closeRect.contains(mouse->pos())) {
             auto view = qobject_cast<const QAbstractItemView *>(option.widget);
 
-            qDebug() << "active tab close clicked";
+            qDebug() << "tab close clicked";
             emit closeClicked(index);
             return true; // событие обработано
-
-        } else {
+        } else if (!isActive) {
             qDebug() << "inactive tab clicked";
             emit tabClicked(index);
         }
