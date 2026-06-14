@@ -13,8 +13,8 @@ public:
     HistoryRepository(DatabaseManager *dbManager, ICoreDispatcher *dispatcher);
 
     void addVisit(HistoryEntry &entry) override;
-    // void deleteEntry(int64_t id) override;
-    // void deleteAll() override;
+    void deleteEntry(int64_t id) override;
+    void deleteAll() override;
 
     void getHistory(std::function<void(std::vector<HistoryEntry>)>
                         callback) override;

@@ -50,3 +50,33 @@ void HistoryRepository::getHistory(
         });
     });
 }
+
+void HistoryRepository::deleteEntry(int64_t id) {
+    _dbManager->post([id](sqlite3 *db) {
+        sqlite3_stmt *stmt = nullptr;
+        sqlite3_prepare_v2(db, "DELETE FROM history WHERE id = ?", -1, &stmt, nullptr);
+        
+        auto rc = sqlite3_step(stmt);
+        if (rc == SQLITE_DONE) {
+            std::printf("successful deleted history entry: %d\n", id);
+        } else {
+            std::printf("delete failed: %s\n", sqlite3_errstr(rc));
+        }
+        sqlite3_finalize(stmt);
+    });
+}
+
+void HistoryRepository::deleteAll() {
+    _dbManager->post([](sqlite3 *db){
+        sqlite3_stmt *stmt = nullptr;
+        sqlite3_prepare_v2(db, "DELETE FROM history", -1, &stmt, nullptr);
+        
+        auto rc = sqlite3_step(stmt);
+        if (rc == SQLITE_DONE) {
+            std::printf("successful deleted all history entries\n");
+        } else {
+            std::printf("delete failed: %s\n", sqlite3_errstr(rc));
+        }
+        sqlite3_finalize(stmt);
+    });
+}
