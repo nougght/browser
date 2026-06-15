@@ -1,4 +1,5 @@
 #include "controllers/BookmarkController.h"
+#include "controllers/HistoryController.h"
 #include "controllers/MainWindowController.h"
 #include "controllers/TabsController.h"
 #include "ui/mainwindow.h"
@@ -8,7 +9,8 @@ class AppBinder {
 public:
     AppBinder(MainWindow *mainWindow, MainWindowController *mainController,
               TabsController *tabsController,
-              BookmarkController *bookmarkController)
+              BookmarkController *bookmarkController,
+              HistoryController *historyController)
          {
 
         QObject::connect(tabsController, &TabsController::urlVisitRequested,
@@ -90,6 +92,7 @@ public:
         QObject::connect(mainWindow, &MainWindow::closeTabClicked, tabsController,
                          &TabsController::onCloseTabClicked);
 
+
         QObject::connect(mainWindow, &MainWindow::historyClicked, mainController,
                          &MainWindowController::onHistoryClicked);
         QObject::connect(mainWindow, &MainWindow::bookmarksClicked,
@@ -99,6 +102,17 @@ public:
 
         QObject::connect(mainWindow, &MainWindow::bookmarkToggled, bookmarkController,
                          &BookmarkController::onActiveTabBookmakToggled);
+        QObject::connect(mainWindow, &MainWindow::bookmarkEntryClicked, bookmarkController,
+                         &BookmarkController::onBookmarkEntryClicked);
+        QObject::connect(mainWindow, &MainWindow::deleteBookmarkEntryClicked, bookmarkController,
+                         &BookmarkController::onDeleteBookmarkClicked);
+
+        QObject::connect(mainWindow, &MainWindow::historyEntryClicked, historyController,
+                         &HistoryController::onEntryClicked);
+        QObject::connect(mainWindow, &MainWindow::deleteHistoryEntryClicked, historyController,
+                         &HistoryController::onDeleteClicked);
+        QObject::connect(mainWindow, &MainWindow::clearHistoryClicked, historyController,
+                         &HistoryController::onClearClicked);
     }
 
 };

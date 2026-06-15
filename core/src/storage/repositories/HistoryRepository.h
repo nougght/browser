@@ -12,11 +12,10 @@ private:
 public:
     HistoryRepository(DatabaseManager *dbManager, ICoreDispatcher *dispatcher);
 
-    void addVisit(HistoryEntry &entry) override;
-    void deleteEntry(int64_t id) override;
-    void deleteAll() override;
+    void addVisit(HistoryEntry &entry, HistoryAddedCallback callback) override;
+    void deleteEntry(int64_t id, HistoryDeletedCallback callback) override;
+    void deleteAll(HistoryDeletedCallback callback) override;
 
-    void getHistory(std::function<void(std::vector<HistoryEntry>)>
-                        callback) override;
+    void getHistory(HistoryGetCallback callback) override;
 };
 #endif

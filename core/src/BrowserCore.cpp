@@ -1,5 +1,7 @@
 #include "BrowserCore.h"
+#include "core/Event.h"
 #include "services/tabs/TabManager.h"
+#include <memory>
 
 IBrowserCore *CreateBrowserCore() { return new BrowserCore; }
 BrowserCore::BrowserCore()
@@ -16,6 +18,9 @@ BrowserCore::BrowserCore()
     post([this] {
         _bookmarkService = std::make_unique<BookmarkService>(_bookmarkRepo.get(),
                                                              _tabManager.get());
+
+        // tabs
+
         _subs.push_back(std::make_unique<Subscription<TabInfo>>(
             _tabManager->tabCreated.subscribe(
                 [this](TabInfo tabInfo) { this->tabCreated.invoke(tabInfo); })));
@@ -42,11 +47,6 @@ BrowserCore::BrowserCore()
                     navigationRequested.invoke(args);
                 })));
 
-        _subs.push_back(std::make_unique<Subscription<NavigationRequestedArgs>>(
-            this->navigationRequested.subscribe(
-                [this](NavigationRequestedArgs args) {
-                    _historyService->onNavigation(args);
-                })));
 
         _subs.push_back(std::make_unique<Subscription<TabTitleChangedArgs>>(
             _tabManager->titleChanged.subscribe(
@@ -66,6 +66,15 @@ BrowserCore::BrowserCore()
             _tabManager->iconChanged.subscribe(
                 [this](TabIconChangedArgs args) { iconChanged.invoke(args); })));
 
+        // history
+
+        // запись в историю добавляется при навигации на новую страницу
+        _subs.push_back(std::make_unique<Subscription<NavigationRequestedArgs>>(
+            this->navigationRequested.subscribe(
+                [this](NavigationRequestedArgs args) {
+                    _historyService->onNavigation(args);
+                })));
+                
         _subs.push_back(std::make_unique<Subscription<std::vector<HistoryEntry>>>(
             _historyService->historyLoaded.subscribe(
                 [this](std::vector<HistoryEntry> history) {
@@ -78,6 +87,22 @@ BrowserCore::BrowserCore()
                 std::cerr << "\n browser core history entry added\n";
                 historyEntryAdded.invoke(entry);
             })));
+        
+        _subs.push_back(std::make_unique<Subscription<int64_t>>(
+            _historyService->entryDeleted.subscribe(
+                [this](int64_t id) { 
+                    std::cerr << "\n browser core history entry deleted, id: " << id << "\n";
+                    historyEntryDeleted.invoke(id); })));
+
+        _subs.push_back(std::make_unique<Subscription<void>>(
+            _historyService->historyCleared.subscribe(
+                [this]() { 
+                    std::cerr << "\n browser core history cleared\n";
+                    historyCleared.invoke(); })));
+        
+        
+
+        // bookmarks
 
         _subs.push_back(std::make_unique<Subscription<std::vector<Bookmark>>>(
             _bookmarkService->bookmarksLoaded.subscribe(
@@ -87,9 +112,9 @@ BrowserCore::BrowserCore()
             _bookmarkService->bookmarkAdded.subscribe(
                 [this](auto bookmark) { bookmarkAdded.invoke(bookmark); })));
 
-        _subs.push_back(std::make_unique<Subscription<size_t>>(
+        _subs.push_back(std::make_unique<Subscription<int64_t>>(
             _bookmarkService->bookmarkDeleted.subscribe(
-                [this](auto ind) { bookmarkDeleted.invoke(ind); })));
+                [this](int64_t id) { bookmarkDeleted.invoke(id); })));
     });
 }
 
@@ -143,16 +168,22 @@ void BrowserCore::post(std::function<void()> task) {
 //     return _tabManager.get();
 // }
 
-void BrowserCore::loadTabs() {
-    post([this] { _tabManager->loadTabs(); });
 
-    // post([this]()
-    //       { tabsLoaded.invoke(_tabManager->getTabInfos()); });
-}
+// history
 
 void BrowserCore::loadHistory() {
     post([this] { _historyService->loadHistory(); });
 }
+
+void BrowserCore::deleteHistoryEntry(int64_t id) {
+    post([this, id] { _historyService->deleteEntry(id); });
+}
+
+void BrowserCore::clearHistory() {
+    post([this] { _historyService->clearHistory(); });
+}
+
+// bookmarks
 
 void BrowserCore::loadBookmarks() {
     post([this] { _bookmarkService->loadBookmarks(); });
@@ -165,8 +196,21 @@ void BrowserCore::switchActiveTabBookmark() {
     });
 }
 
+void BrowserCore::addBookmark(Bookmark bookmark) {
+    post([this, bookmark] { _bookmarkService->addBookmark(bookmark); });
+}
 void BrowserCore::deleteBookmark(int64_t id) {
     post([this, id] { _bookmarkService->deleteBookmark(id); });
+}
+
+
+// tabs
+
+void BrowserCore::loadTabs() {
+    post([this] { _tabManager->loadTabs(); });
+
+    // post([this]()
+    //       { tabsLoaded.invoke(_tabManager->getTabInfos()); });
 }
 
 void BrowserCore::createTab(Url url) {
@@ -184,9 +228,11 @@ void BrowserCore::createTab() {
 }
 
 void BrowserCore::closeTab(TabId id) {
+    std::printf("BC closeTab %u\n", id.value);
     post([this, id] {
-        if (!id.isValid())
+        if (!id.isValid()) {
             return;
+        }
         _tabManager->closeTab(id);
     });
 }
@@ -214,6 +260,7 @@ void BrowserCore::changeTabUrl(TabId id, Url url) {
 }
 
 void BrowserCore::changeTabTitle(TabId id, std::string title) {
+    std::printf("browser core change tab title");
     post([this, id, title] {
         if (!id.isValid())
             return;

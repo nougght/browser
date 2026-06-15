@@ -65,6 +65,7 @@ public:
     // добавить задачу в очередь обработки
     void post(std::function<void()> task) override;
 
+    // tabs
     void loadTabs() override;
     void createTab(Url url) override;
     void createTab() override;
@@ -78,13 +79,17 @@ public:
     void changeTabTitle(TabId id, std::string title) override;
     void changeTabLoadingProgress(TabId id, int progress) override;
     void setTabLoadingStatus(TabId id, bool isLoading) override;
-
     void reloadTab(TabId id) override;
 
+    // history
     void loadHistory() override;
+    void deleteHistoryEntry(int64_t id) override;
+    void clearHistory() override;
 
+    // bookmarks
     void loadBookmarks() override;
     void switchActiveTabBookmark() override;
+    void addBookmark(Bookmark bookmark) override;
     void deleteBookmark(int64_t id) override;
 
     // прямые геттеры в основном классе не используются, вместо них - события

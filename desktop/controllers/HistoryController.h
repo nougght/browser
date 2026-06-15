@@ -17,13 +17,20 @@ public:
     // slots for core signals
     void onHistoryLoaded(std::vector<HistoryEntry>);
     void onEntryAdded(HistoryEntry entry);
+    void onEntryDeleted(int64_t id);
+    void onHistoryCleared();
 
-
+    // slots for ui signals
+    void onEntryClicked(int index);
+    void onDeleteClicked(int index);
+    void onClearClicked();
 signals:
-
     void historyLoaded(std::vector<HistoryEntry> history);
     void entryAdded(HistoryEntry entry);
 
+    // unused
+    void entryDeleted(int64_t id);
+    void historyCleared();
 
 private:
 

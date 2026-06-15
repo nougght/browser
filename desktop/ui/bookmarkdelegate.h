@@ -1,14 +1,13 @@
-#ifndef TABDELEGATE_H
-#define TABDELEGATE_H
+#ifndef BOOKMARKDELEGATE_H
+#define BOOKMARKDELEGATE_H
 
 #include <QStyledItemDelegate>
 
-// delegate for tab item in tab bar 
-class TabDelegate : public QStyledItemDelegate
+class BookmarkDelegate : public QStyledItemDelegate
 {
     Q_OBJECT
 public:
-    explicit TabDelegate(QObject *parent = nullptr);
+    explicit BookmarkDelegate(QObject *parent = nullptr);
     QSize sizeHint(const QStyleOptionViewItem &option,
                    const QModelIndex &index) const override;
     void paint(QPainter* painter,
@@ -18,13 +17,13 @@ public:
                      QAbstractItemModel* model,
                      const QStyleOptionViewItem& option,
                      const QModelIndex& index) override;
-signals:
-    void tabClicked(const QModelIndex &index);
-    void closeClicked(const QModelIndex &index);
 
+signals:
+    void bookmarkClicked(const QModelIndex &index);
+    void deleteClicked(const QModelIndex &index);
 private:
-    bool _closeHovered;
-    QPersistentModelIndex _hoveredIndex;
+    int _itemHMargin;
+    int _itemVMargin;
 };
 
-#endif // TABDELEGATE_H
+#endif // BOOKMARKDELEGATE_H

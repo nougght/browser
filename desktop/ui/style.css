@@ -12,9 +12,9 @@ QStackedWidget{
     padding: 0;
 }
 
-QPushButton{
+/* QPushButton{
     background-color: transparent;
-}
+} */
 
 #tabView {
 
@@ -128,18 +128,19 @@ QListView#tabsList QScrollBar::sub-page:horizontal {
     width: 0;
 }
 
-QListView#historyList
+QListView#historyList, 
+QListView#bookmarksList
 {
     background-color: transparent;
-    border: none;
+    /* border: 1px solid red; */
 }
 
-QListView#historyList::item
+QListView#historyList::item,
+QListView#bookmarksList::item
 {
     margin: 0 0 1 0;
     text-align: left;
     border: none;
-
 }
 
 

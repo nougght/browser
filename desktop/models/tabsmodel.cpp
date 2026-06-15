@@ -46,20 +46,23 @@ void TabsModel::addTab(const TabInfo &tab) {
 }
 
 void TabsModel::removeTab(TabId id) {
-    int ind = getTabIndex(id);
-    if (ind == -1)
+    auto optionalInd = getTabIndex(id);
+    if (!optionalInd.has_value())
+    {
         qDebug() << "removeTab tab not found: " << id.value;
         return;
+    }
+    auto ind = optionalInd.value();
     beginRemoveRows(QModelIndex(), ind, ind);
     _deleteWithIndexUpdate(id, ind);
     endRemoveRows();
 }
 
 
-int TabsModel::getTabIndex(TabId id) {
+std::optional<size_t> TabsModel::getTabIndex(TabId id) {
     auto it = _idIndex.find(id);
     if (it == _idIndex.end())
-        return -1;
+        return std::nullopt;
     return it->second;
 }
 
@@ -73,42 +76,57 @@ void TabsModel::_deleteWithIndexUpdate(TabId id, size_t ind) {
 }
 
 void TabsModel::updateTabUrl(TabId id, Url url) {
-    int ind = getTabIndex(id);
-
-    if (ind == -1)
+    auto optionalInd = getTabIndex(id);
+    if (!optionalInd.has_value())
+    {
         qDebug() << "updateTabUrl tab not found: " << id.value;
         return;
+    }
+    auto ind = optionalInd.value();
     _tabs[ind].url = url;
     emit dataChanged(index(ind), index(ind), {UrlRole});
 }
 
 void TabsModel::updateTabTitle(TabId id, std::string title) {
-    int ind = getTabIndex(id);
-
-    if (ind == -1)
+    auto optionalInd = getTabIndex(id);
+    if (!optionalInd.has_value())
+    {
         qDebug() << "updateTabTitle tab not found: " << id.value;
         return;
+    }
+    auto ind = optionalInd.value();
+
+    if (ind == -1) {
+        qDebug() << "updateTabTitle tab not found: " << id.value;
+        return;
+    }
     _tabs[ind].title = title;
     emit dataChanged(index(ind), index(ind), {Qt::DisplayRole});
 }
 
 void TabsModel::updateTabLoading(TabId id, bool isLoading) {
-    int ind = getTabIndex(id);
-
-    if (ind == -1)
+    auto optionalInd = getTabIndex(id);
+    if (!optionalInd.has_value())
+    {
         qDebug() << "updateTabLoading tab not found: " << id.value;
         return;
+    }
+    auto ind = optionalInd.value();
+
     _tabs[ind].isLoading = isLoading;
     emit dataChanged(index(ind), index(ind), {IsLoadingRole});
 }
 
 void TabsModel::updateTabNavigation(TabId id, bool canGoBack,
                                     bool canGoForward) {
-    int ind = getTabIndex(id);
-
-    if (ind == -1)
+    auto optionalInd = getTabIndex(id);
+    if (!optionalInd.has_value())
+    {
         qDebug() << "updateTabNavigation tab not found: " << id.value;
         return;
+    }
+    auto ind = optionalInd.value();
+
     _tabs[ind].canGoBack = canGoBack;
     _tabs[ind].canGoForward = canGoForward;
     emit dataChanged(index(ind), index(ind),
@@ -117,10 +135,32 @@ void TabsModel::updateTabNavigation(TabId id, bool canGoBack,
 
 
 TabInfo TabsModel::getTabInfo(TabId id) {
-    int ind = getTabIndex(id);
-    if (ind == -1)
+    auto optionalInd = getTabIndex(id);
+    if (!optionalInd.has_value()) {
         // TODO: error handling
         throw std::runtime_error("Tab with id " + std::to_string(id.value) +
                                  " not found");
-    return _tabs[ind];
+    }
+    return _tabs[optionalInd.value()];
+}
+
+void TabsModel::setActiveTabId(TabId id) {
+    if (!id.isValid() || id == _activeTabId)
+        return;
+
+    auto optionalInd = getTabIndex(_activeTabId);
+    auto optionalNewInd = getTabIndex(id);
+    if (!optionalNewInd.has_value())
+    {
+        qDebug() << "setActiveTabId new active tab not found: " << id.value;
+        return;
+    }
+    _activeTabId = id;
+    emit dataChanged(index(optionalNewInd.value()), index(optionalNewInd.value()), {IsActiveRole});
+    if (optionalInd.has_value()) {
+        emit dataChanged(index(optionalInd.value()), index(optionalInd.value()), {IsActiveRole});
+    } else {
+        qDebug() << "setActiveTabId activetab not found: " << _activeTabId.value;
+    }
+    
 }

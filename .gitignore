@@ -1,4 +1,7 @@
 .vscode
 .cursor
-/build
 .qtcreator
+.cache
+/build
+/compile_commands.json
+CmakePresets.json

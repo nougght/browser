@@ -31,6 +31,7 @@ public:
     }
 
 signals:
+    // tabs
     void tabsLoaded(std::vector<TabInfo> tabs);
     void tabCreated(TabInfo tab);
     void tabClosed(TabId id);
@@ -41,12 +42,16 @@ signals:
     void loadingStatusChanged(TabLoadingStatusChangedArgs args);
     void loadingProgressChanged(TabLoadingProgressChangedArgs args);
 
+    // history
     void historyLoaded(std::vector<HistoryEntry> history);
     void historyEntryAdded(HistoryEntry entry);
+    void historyEntryDeleted(int64_t id);
+    void historyCleared();
 
+    // bookmarks
     void bookmarksLoaded(std::vector<Bookmark> bookmarks);
     void bookmarkAdded(Bookmark bookmark);
-    void bookmarkDeleted(size_t ind);
+    void bookmarkDeleted(int64_t id);
 
 public slots:
     void loadTabs();
@@ -66,9 +71,12 @@ public slots:
     void reloadTab(TabId id);
 
     void loadHistory();
+    void deleteHistoryEntry(int64_t id);
+    void clearHistory();
 
     void loadBookmarks();
     void switchActiveTabBookmark();
+    void addBookmark(Bookmark bookmark);
     void deleteBookmark(int64_t id);
 
 private:
