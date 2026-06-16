@@ -126,6 +126,7 @@ void TabsController::onTabCreated(TabInfo tabInfo)
 
 void TabsController::onTabClosed(TabId id)
 {
+    qDebug() << "TC onTabClosed: " << id.value;
     _ctx->getTabsModel()->removeTab(id);
     emit tabClosed(id);
 }
@@ -146,6 +147,7 @@ void TabsController::onActiveTabChanged(TabId id)
 
 void TabsController::onTabTitleChanged(TabTitleChangedArgs args)
 {
+    qDebug() << "tabs controller on tab title changed";
     _ctx->getTabsModel()->updateTabTitle(args.id, args.newTitle);
 }
 

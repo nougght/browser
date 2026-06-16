@@ -30,24 +30,30 @@ TabId TabManager::createTab() { return createTab(_initialTabUrl); }
 
 void TabManager::closeTab(TabId id) {
     auto it = std::find(_tabsOrder.begin(), _tabsOrder.end(), id);
-    if (it != _tabsOrder.end()) {
-        if (_tabs.size() == 1) {
-            // закрытие последней вкладки
-            lastTabClosed.invoke();
-            return;
-        } else {
-            auto nextIt = std::next(it);
-            // переход на соседнюю от текущей вкладки
-            if (nextIt != _tabsOrder.end()) {
-                changeActiveTab(*(nextIt));
-            } else if (nextIt != _tabsOrder.begin()) {
-                changeActiveTab(*(std::prev(it)));
-            }
-        }
-        _tabsOrder.erase(it);
-        _tabs.erase(id);
-        tabClosed.invoke(id);
+
+    if (!id.isValid() || it == _tabsOrder.end()) {
+        std::printf("TM closeTab tab not found\n");
+        return;
     }
+    if (_tabs.size() == 1) {
+        std::printf("TM closeTab last tab\n");
+        // закрытие последней вкладки
+        lastTabClosed.invoke();
+        return;
+    } else if (id == _activeTabId) {
+        auto nextIt = std::next(it);
+        // переход на соседнюю от текущей вкладки
+        if (nextIt != _tabsOrder.end()) {
+            changeActiveTab(*(nextIt));
+        } else if (nextIt != _tabsOrder.begin()) {
+            changeActiveTab(*(std::prev(it)));
+        }
+    }
+    _tabsOrder.erase(it);
+    _tabs.erase(id);
+    std::printf("TM closeTab tab closed\n");
+    tabClosed.invoke(id);
+    
 }
 
 void TabManager::changeActiveTab(TabId id) {
@@ -77,10 +83,14 @@ void TabManager::changeTabUrl(TabId id, Url url) {
 }
 
 void TabManager::changeTabTitle(TabId id, std::string title) {
+    std::printf("TM changeTabTitle");
     auto existing = _tabs.find(id);
     if (existing != _tabs.end()) {
         existing->second->changeTitle(title);
+        std::printf("TM changeTabTitle invoke titleChanged");
         titleChanged.invoke(TabTitleChangedArgs{id, title});
+    } else {
+        std::printf(" not found\n");
     }
 }
 

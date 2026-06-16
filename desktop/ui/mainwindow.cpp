@@ -166,6 +166,21 @@ void MainWindow::setupEvents() {
 
     // connect(_tabBar, &TabBarWithControl::barDoubleClicked, this,
     // &MainWindow::switch)
+
+
+    // history page
+    connect(_historyPage, &HistoryPage::historyClicked, this,
+            [this](int index) { emit historyEntryClicked(index); });
+    connect(_historyPage, &HistoryPage::deleteClicked, this,
+            [this](int index) { emit deleteHistoryEntryClicked(index); });
+    connect(_historyPage, &HistoryPage::clearClicked, this,
+            [this] { emit clearHistoryClicked(); });
+
+    // bookmarks page
+    connect(_bookmarksPage, &BookmarksPage::bookmarkClicked, this,
+            [this](int index) { emit bookmarkEntryClicked(index); });
+    connect(_bookmarksPage, &BookmarksPage::deleteClicked, this,
+            [this](int index) { emit deleteBookmarkEntryClicked(index); });
 }
 
 // setup signals for webengine
@@ -284,16 +299,16 @@ void MainWindow::switchToTab(TabInfo tabInfo, bool isBookmarked) {
         _forwardButton->setEnabled(tabInfo.canGoForward);
 
         switchActiveTabBookmark(isBookmarked);
-        QTimer::singleShot(1, this, [=]() {
-            QMetaObject::invokeMethod(
-                this,
-                [=]() {
-                    _tabBar->setTabSelected(std::distance(_tabWidgets.begin(), it));
+        // QTimer::singleShot(1, this, [=]() {
+        //     QMetaObject::invokeMethod(
+        //         this,
+        //         [=]() {
+        //             _tabBar->setTabSelected(std::distance(_tabWidgets.begin(), it));
 
-                    qDebug() << "\nui switched active tab\n";
-                },
-                Qt::QueuedConnection);
-        });
+        //             qDebug() << "\nui switched active tab\n";
+        //         },
+        //         Qt::QueuedConnection);
+        // });
     }
 }
 

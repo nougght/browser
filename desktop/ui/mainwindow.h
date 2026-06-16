@@ -40,7 +40,11 @@ signals:
     void forwardClicked();
 
     void historyClicked();
+    void historyEntryClicked(int index);
+    void deleteHistoryEntryClicked(int index);
+    void clearHistoryClicked();
 
+    
     void searchClicked(QString searchQuery);
     void engineUrlChanged(TabId id, QUrl newUrl);
     void engineTitleChanged(TabId id, QString newTitle);
@@ -50,6 +54,8 @@ signals:
 
     void bookmarkToggled();
     void bookmarksClicked();
+    void bookmarkEntryClicked(int index);
+    void deleteBookmarkEntryClicked(int index);
 
 public slots:
 

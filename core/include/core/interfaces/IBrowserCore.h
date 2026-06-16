@@ -8,10 +8,12 @@
 #include "ICoreDispatcher.h"
 
 
+// TODO: добавить возврат ошибок
+
 // ядро браузера с встроенным циклом событий(event loop)
 class IBrowserCore : public ICoreDispatcher {
 public:
-    // добавить задачу в очередь обработки
+    // tabs
     virtual void loadTabs() = 0;
     virtual void createTab(Url url) = 0;
     virtual void createTab() = 0;
@@ -25,12 +27,17 @@ public:
     virtual void changeTabTitle(TabId id, std::string title) = 0;
     virtual void changeTabLoadingProgress(TabId id, int progress) = 0;
     virtual void setTabLoadingStatus(TabId id, bool isLoading) = 0;
-
     virtual void reloadTab(TabId id) = 0;
-    virtual void loadHistory() = 0;
 
+    // history
+    virtual void loadHistory() = 0;
+    virtual void deleteHistoryEntry(int64_t id) = 0;
+    virtual void clearHistory() = 0;
+
+    // bookmarks
     virtual void loadBookmarks() = 0;
     virtual void switchActiveTabBookmark() = 0;
+    virtual void addBookmark(Bookmark bookmark) = 0;
     virtual void deleteBookmark(int64_t id) = 0;
 
     // события ядра
@@ -68,14 +75,17 @@ public:
     Event<TabId> tabReloaded;
 
 
+    // history events
 
     Event<std::vector<HistoryEntry>> historyLoaded;
     Event<HistoryEntry> historyEntryAdded;
+    Event<int64_t> historyEntryDeleted;
+    Event<void> historyCleared;
 
-
+    // bookmarks events
     Event<std::vector<Bookmark>> bookmarksLoaded;
     Event<Bookmark> bookmarkAdded;
-    Event<size_t> bookmarkDeleted;
+    Event<int64_t> bookmarkDeleted;
 };
 
 

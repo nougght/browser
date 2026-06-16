@@ -19,12 +19,13 @@ public:
     // slots for core signals
     void onBookmarksLoaded(std::vector<Bookmark>);
     void onBookmarkAdded(Bookmark bookmark);
-    void onBookmarkDeleted(size_t index);
+    void onBookmarkDeleted(int64_t id);
 
 
     // slots for ui signals
     void onActiveTabBookmakToggled();
-
+    void onBookmarkEntryClicked(int index);
+    void onDeleteBookmarkClicked(int index);
 signals:
     void bookmarksLoaded(std::vector<Bookmark> bookmarks);
     void switchActiveTabBookmark(bool isBookmarked);

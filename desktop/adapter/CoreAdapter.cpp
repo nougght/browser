@@ -52,7 +52,9 @@ void CoreAdapter::_setupEvents() {
     _subscriptions.push_back(std::make_unique<Subscription<TabTitleChangedArgs>>(
         _core->titleChanged.subscribe([this](TabTitleChangedArgs args) {
             QMetaObject::invokeMethod(
-                this, [this, args]() { emit this->titleChanged(args); },
+                this, [this, args]() {
+                    std::printf("adapter on tab title changed");
+                    emit this->titleChanged(args); },
                 Qt::QueuedConnection);
         })));
 
@@ -75,6 +77,7 @@ void CoreAdapter::_setupEvents() {
                         [this, args]() { emit this->loadingProgressChanged(args); },
                         Qt::QueuedConnection);
                 })));
+
 
     _subscriptions.push_back(
         std::make_unique<Subscription<std::vector<HistoryEntry>>>(
@@ -99,6 +102,18 @@ void CoreAdapter::_setupEvents() {
                 },
                 Qt::QueuedConnection);
         })));
+    _subscriptions.push_back(std::make_unique<Subscription<int64_t>>(
+        _core->historyEntryDeleted.subscribe([this](int64_t id) {
+            QMetaObject::invokeMethod(
+                this, [this, id]() { emit this->historyEntryDeleted(id); },
+                Qt::QueuedConnection);
+        })));
+    _subscriptions.push_back(std::make_unique<Subscription<void>>(
+        _core->historyCleared.subscribe([this]() {
+            QMetaObject::invokeMethod(
+                this, [this]() { emit this->historyCleared(); },
+                Qt::QueuedConnection);
+        })));
 
     _subscriptions.push_back(
         std::make_unique<Subscription<std::vector<Bookmark>>>(
@@ -114,29 +129,34 @@ void CoreAdapter::_setupEvents() {
                 this, [this, bookmark]() { emit this->bookmarkAdded(bookmark); },
                 Qt::QueuedConnection);
         })));
-    _subscriptions.push_back(std::make_unique<Subscription<size_t>>(
-        _core->bookmarkDeleted.subscribe([this](auto ind) {
+    _subscriptions.push_back(std::make_unique<Subscription<int64_t>>(
+        _core->bookmarkDeleted.subscribe([this](int64_t id) {
             QMetaObject::invokeMethod(
                 this,
-                [this, ind]() {
+                [this, id]() {
                     qDebug() << "\n adapter bookmark deleted\n";
-                    emit this->bookmarkDeleted(ind);
+                    emit this->bookmarkDeleted(id);
                 },
                 Qt::QueuedConnection);
         })));
 }
 
-void CoreAdapter::loadTabs() { _core->loadTabs(); }
 
 void CoreAdapter::loadHistory() { _core->loadHistory(); }
+void CoreAdapter::deleteHistoryEntry(int64_t id) { _core->deleteHistoryEntry(id); }
+void CoreAdapter::clearHistory() { _core->clearHistory(); }
+
 
 void CoreAdapter::loadBookmarks() { _core->loadBookmarks(); }
 void CoreAdapter::switchActiveTabBookmark() {
-
     qDebug() << "\n adapter switch tab bookmark\n";
     _core->switchActiveTabBookmark();
 }
+void CoreAdapter::addBookmark(Bookmark bookmark) { _core->addBookmark(bookmark); }
 void CoreAdapter::deleteBookmark(int64_t id) { _core->deleteBookmark(id); }
+
+
+void CoreAdapter::loadTabs() { _core->loadTabs(); }
 void CoreAdapter::createTab(QUrl url) { _core->createTab(convert(url)); }
 
 void CoreAdapter::createTab() { _core->createTab(); }

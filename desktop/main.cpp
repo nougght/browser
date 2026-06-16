@@ -12,6 +12,8 @@
 #include <QTimer>
 #include <QTranslator>
 
+// TODO: add error logging
+
 int main(int argc, char *argv[]) {
     // QCoreApplication::setAttribute(Qt::AA_UseDesktopOpenGL);
     // QCoreApplication::setAttribute(Qt::AA_ShareOpenGLContexts);
@@ -48,7 +50,7 @@ int main(int argc, char *argv[]) {
         std::make_unique<BookmarkController>(coreAdapter.get(), context);
     // bind controller and view signals
     AppBinder binder(mainWindow, mainController.get(), tabsController.get(),
-                     bookmarkController.get());
+                     bookmarkController.get(), historyController.get());
 
     QTimer::singleShot(10, [&] {
         QFile style(":/ui/style.css");

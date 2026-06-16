@@ -21,11 +21,12 @@ public:
     BookmarkService(IBookmarkRepository *repo, TabManager *tabManager);
     void loadBookmarks();
     void switchActiveTabBookmark();
+    void addBookmark(Bookmark bookmark);
     void deleteBookmark(int64_t id);
 
     Event<std::vector<Bookmark>> bookmarksLoaded;
     Event<Bookmark> bookmarkAdded;
-    Event<size_t> bookmarkDeleted;
+    Event<int64_t> bookmarkDeleted;
 };
 
 #endif // BOOKMARKSERVICE_H

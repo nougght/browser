@@ -53,7 +53,8 @@ struct Identifier
 
     bool isValid() const
     {
-        return !(value == 0);
+        // std::printf("ID valid - %s\n", value != 0 ? "true" : "false");
+        return value != 0;
     }
 };
 

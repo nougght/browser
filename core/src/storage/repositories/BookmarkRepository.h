@@ -11,9 +11,9 @@ private:
 
 public:
     BookmarkRepository(DatabaseManager *dbManager, ICoreDispatcher *dispatcher);
-    void addBookmark(Bookmark &bookmark, std::function<void(Bookmark)>) override;
-    void deleteBookmark(int64_t id) override;
-    void getBookmarks(std::function<void(std::vector<Bookmark>)> callback) override;
+    void addBookmark(Bookmark &bookmark, BookmarkAddedCallback callback) override;
+    void deleteBookmark(int64_t id, BookmarkDeletedCallback callback) override;
+    void getBookmarks(BookmarkGetCallback callback) override;
 };
 
 #endif // BOOKMARKREPOSITORY_H

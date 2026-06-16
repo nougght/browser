@@ -8,16 +8,20 @@
 class HistoryService
 {
 private:
-    std::unordered_map<int64_t, size_t> _index;
-    std::vector<std::unique_ptr<Bookmark>> _bookmarks;
+    // TODO: добавить хранение части истории в памяти
 
     IHistoryRepository *_historyRepo;
 public:
     HistoryService(IHistoryRepository *historyRepo);
     void onNavigation(NavigationRequestedArgs args);
     void loadHistory();
+    void deleteEntry(int64_t id);
+    void clearHistory();
+
+
     Event<std::vector<HistoryEntry>> historyLoaded;
     Event<HistoryEntry> entryAdded;
-
+    Event<int64_t> entryDeleted;
+    Event<void> historyCleared;
 };
 #endif

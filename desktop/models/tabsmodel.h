@@ -35,8 +35,8 @@ public:
         return _tabs[index].id;
     }
 
-    int getTabIndex(TabId id);
-    void setActiveTabId(TabId id) {_activeTabId = id;}
+    std::optional<size_t> getTabIndex(TabId id);
+    void setActiveTabId(TabId id);
     TabId getActiveTabId() {return _activeTabId;}
     TabInfo getTabInfo(TabId id);
 

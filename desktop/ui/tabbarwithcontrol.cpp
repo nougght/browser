@@ -34,9 +34,19 @@ void TabBarWithControl::setupUI() {
     _tabsList->setHorizontalScrollMode(QAbstractItemView::ScrollPerPixel);
 
     _tabsList->setModel(_tabsModel);
+    
+    connect(_tabsModel, &TabsModel::dataChanged, this, [this](const QModelIndex &topLeft,
+        const QModelIndex &, const QList<int> &roles) {
+        if (!roles.contains(TabsModel::IsActiveRole))
+            return;
+        if (topLeft.data(TabsModel::IsActiveRole).toBool())
+            _tabsList->setCurrentIndex(topLeft);
+    });
+
     _tabsList->setItemAlignment(Qt::AlignmentFlag::AlignCenter);
     // _tabsList->setUniformItemSizes(true);
     _tabsList->setWordWrap(false);
+    _tabsList->setMouseTracking(true);
     auto delegate = new TabDelegate();
 
     connect(delegate, &TabDelegate::closeClicked, this,
@@ -56,19 +66,19 @@ void TabBarWithControl::setupUI() {
             [this](int min, int max) {
         int itemHeight = _tabsList->gridSize().height(); // 30
         int frameWidth =
-            _tabsList->frameWidth() * 2; // Рамки виджета (обычно 2-4px)
-        int spacing = 0;                 // Отступы вокруг элемента (4px)
+            _tabsList->frameWidth() * 2; // Рамки виджета 
+        int spacing = 0;                 
 
-        // Базовая высота без скроллбара
-        int targetHeight = itemHeight + spacing; // ~36-38px
+        // высота без скроллбара
+        int targetHeight = itemHeight + spacing; 
 
-        // Если max > 0, значит контент не влезает и скроллбар появился
+        
         if (max > 0) {
             targetHeight +=
                 _tabsList->horizontalScrollBar()->sizeHint().height();
         }
 
-        // Динамически меняем высоту списка
+        // динамически меняем высоту списка
         _tabsList->setFixedHeight(targetHeight);
     });
 
@@ -120,7 +130,6 @@ void TabBarWithControl::mouseDoubleClickEvent(QMouseEvent *event) {
 void TabBarWithControl::onTabCloseClicked(const QModelIndex &index) {
     qDebug() << "selected:" << _tabsList->selectionModel()->selectedIndexes();
 
-    qDebug() << "selected tab close clicked";
     emit tabCloseClicked(index.row());
 }
 
@@ -129,16 +138,16 @@ void TabBarWithControl::onTabClicked(const QModelIndex &index) {
     emit tabClicked(index.row());
 }
 
-void TabBarWithControl::setTabSelected(int ind) {
-    if (ind >= _tabsModel->rowCount()) {
-        qDebug() << "invalid tab index to select: " << ind
-                 << " tabs count = " << _tabsModel->rowCount() << "\n";
-        return;
-    }
-    QModelIndex index = _tabsModel->index(ind, 0);
-    qDebug() << "\nset selected tab : " << index.row()
-             << "\n rows count = " << _tabsModel->rowCount() << "\n";
-    _tabsList->setCurrentIndex(index);
-    _tabsList->selectionModel()->select(
-        index, QItemSelectionModel::ClearAndSelect | QItemSelectionModel::Rows);
-}
+// void TabBarWithControl::setTabSelected(int ind) {
+//     if (ind >= _tabsModel->rowCount()) {
+//         qDebug() << "invalid tab index to select: " << ind
+//                  << " tabs count = " << _tabsModel->rowCount() << "\n";
+//         return;
+//     }
+//     QModelIndex index = _tabsModel->index(ind, 0);
+//     qDebug() << "\nset selected tab : " << index.row()
+//              << "\n rows count = " << _tabsModel->rowCount() << "\n";
+//     _tabsList->setCurrentIndex(index);
+//     _tabsList->selectionModel()->select(
+//         index, QItemSelectionModel::ClearAndSelect | QItemSelectionModel::Rows);
+// }
