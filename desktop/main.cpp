@@ -12,6 +12,8 @@
 #include <QTimer>
 #include <QTranslator>
 
+// TODO: add error logging
+
 int main(int argc, char *argv[]) {
     // QCoreApplication::setAttribute(Qt::AA_UseDesktopOpenGL);
     // QCoreApplication::setAttribute(Qt::AA_ShareOpenGLContexts);

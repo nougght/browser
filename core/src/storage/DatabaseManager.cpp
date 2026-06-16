@@ -17,9 +17,9 @@ DatabaseManager::DatabaseManager(const std::string &dbPath) {
 void DatabaseManager::run() {
     std::ifstream f("core_build/init.sql");
     if (f.is_open() == false){
-        std::cerr << "\nFILE NOT OPEN\n";
+        throw std::runtime_error("DatabaseManager init.sql file not open");
     } else {
-        std::cerr << "\nFILE OPEN\n";
+        std::cerr << "\ninit.sql file opened\n";
 
     }
     std::stringstream ss;
