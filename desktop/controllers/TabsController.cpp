@@ -203,6 +203,7 @@ void TabsController::onTabsModelDataChanged(const QModelIndex &topLeft,
                                             const QModelIndex &bottomRight,
                                             const QList<int> &roles)
 {
+    qDebug() << "\nTabs model data changed: " << topLeft.row() << " " << bottomRight.row() << " " << roles.size();
     if (topLeft.row() != _ctx->getTabsModel()->getTabIndex(_ctx->activeTabId()))
     {
         return;

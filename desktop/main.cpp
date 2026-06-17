@@ -17,6 +17,7 @@
 int main(int argc, char *argv[]) {
     // QCoreApplication::setAttribute(Qt::AA_UseDesktopOpenGL);
     // QCoreApplication::setAttribute(Qt::AA_ShareOpenGLContexts);
+    QGuiApplication::setAttribute(Qt::AA_DontCreateNativeWidgetSiblings);
 
     QApplication a(argc, argv);
     // a.setStyle("Fusion");
@@ -65,7 +66,7 @@ int main(int argc, char *argv[]) {
     coreAdapter->loadTabs();
     coreAdapter->loadHistory();
     coreAdapter->loadBookmarks();
-    mainWindow->setFixedSize(1000, 800);
+    mainWindow->resize(1000, 800);
     mainWindow->show();
 
     return a.exec();

@@ -11,6 +11,7 @@
 #include <core/eventArgs.h>
 #include <core/models.h>
 #include <core/types.h>
+#include <QWKWidgets/widgetwindowagent.h>
 
 QUrl convert(Url url) {
     return QUrl(QString::fromStdString(url.toStdString()));
@@ -55,7 +56,29 @@ void MainWindow::setupUI(QAbstractListModel *tabsModel,
         qDebug() << "profile destroyed";
     });
 
+    this->setMouseTracking(true);
     _tabBar = new TabBarWithControl(_centralWidget, tabsModel);
+    
+    auto *agent = new QWK::WidgetWindowAgent(this);
+    agent->setup(this);
+    
+
+    agent->setTitleBar(_tabBar);
+    // кнопки панели управления
+    agent->setSystemButton(QWK::WindowAgentBase::Minimize, _tabBar->minimiseButton());
+    agent->setSystemButton(QWK::WindowAgentBase::Maximize, _tabBar->maximizeButton());
+    agent->setSystemButton(QWK::WindowAgentBase::Close,     _tabBar->closeButton());
+    // виджеты получающие mouse event (без перетаскивания окна)
+    agent->setHitTestVisible(_tabBar->tabCountLabel(), true);
+    agent->setHitTestVisible(_tabBar->tabsList(),      true);
+    agent->setHitTestVisible(_tabBar->separator(), true);
+    agent->setHitTestVisible(_tabBar->addNewTabButton(), true);
+    agent->setHitTestVisible(_tabBar->minimiseButton(), true);
+    agent->setHitTestVisible(_tabBar->maximizeButton(), true);
+    agent->setHitTestVisible(_tabBar->closeButton(),    true);
+    // agent->setWindowAttribute("mica", true);
+    
+
     _menu = new BrowserMenu();
     _menu->setWindowFlags(Qt::Popup | Qt::FramelessWindowHint);
     _menu->setObjectName("browserMenu");
@@ -120,11 +143,11 @@ void MainWindow::setupUI(QAbstractListModel *tabsModel,
     _centralLayout->addWidget(_loadingBar, Qt::AlignmentFlag::AlignCenter);
     _centralLayout->addWidget(_prgsBarPlaceholder);
     _centralLayout->addWidget(_stackedWidget);
-    this->setMinimumSize(1000, 700);
+    this->setMinimumSize(500, 300);
 
     // TODO: for native gestures try https://github.com/stdware/qwindowkit
-    this->setWindowFlags(Qt::WindowFlags::enum_type::FramelessWindowHint);
-    this->setAttribute(Qt::WA_TranslucentBackground);
+    // this->setWindowFlags(Qt::WindowFlags::enum_type::FramelessWindowHint);
+    // this->setAttribute(Qt::WA_TranslucentBackground);
 
 }
 
@@ -139,6 +162,14 @@ void MainWindow::setupEvents() {
 
     connect(_tabBar, &TabBarWithControl::minimiseClicked, this,
             &MainWindow::showMinimized);
+    connect(_tabBar, &TabBarWithControl::maximizedChanged, this,
+        [this](bool isMaximized) { 
+            if (isMaximized) {
+                this->showMaximized();
+            } else {
+                this->showNormal();
+            }
+        });
     connect(_tabBar, &TabBarWithControl::closeClicked, this, &MainWindow::close);
 
     connect(_tabBar, &TabBarWithControl::newTabClicked, this,
@@ -330,6 +361,7 @@ void MainWindow::setForwardButtonEnabled(bool enabled) {
 }
 
 void MainWindow::updateUrlBar(QUrl newUrl) {
+    qDebug() << "update url bar: " << newUrl.toString();
     if (_search->text() != newUrl) {
         QSignalBlocker blocker(_search);
         _search->setText(newUrl.toString());

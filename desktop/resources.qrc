@@ -7,5 +7,11 @@
         <file>assets/bm-filled.svg</file>
         <file>assets/cross.svg</file>
         <file>assets/trash.svg</file>
+        <file>assets/maximize.svg</file>
+        <file>assets/restore.svg</file>
+        <file>assets/circle-plus.svg</file>
+        <file>assets/wrap.svg</file>
+        <file>assets/separator.svg</file>
+        <file>assets/separator-hover.svg</file>
     </qresource>
 </RCC>
