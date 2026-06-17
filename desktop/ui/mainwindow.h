@@ -18,7 +18,7 @@
 #include "searchbar.h"
 #include "tabbarwithcontrol.h"
 
-// to do: выделить контроллер из виджета и оставить только ui
+// done: выделить контроллер из виджета и оставить только ui
 
 class MainWindow : public QWidget {
     Q_OBJECT

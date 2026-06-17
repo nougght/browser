@@ -89,11 +89,26 @@ else()
 endif()
 
 add_subdirectory(../core core_build)
+add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/../third_party/qwindowkit
+                 ${CMAKE_BINARY_DIR}/third_party/qwindowkit
+                 EXCLUDE_FROM_ALL)
 target_link_libraries(desktop PRIVATE
     Qt${QT_VERSION_MAJOR}::Widgets
     Qt${QT_VERSION_MAJOR}::WebEngineWidgets
+    QWindowKit::Widgets
     browser_core
     )
+
+if(WIN32 AND TARGET QWKWidgets)
+    add_custom_command(TARGET desktop POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different
+            $<TARGET_FILE:QWKCore>
+            $<TARGET_FILE:QWKWidgets>
+            $<TARGET_FILE_DIR:desktop>
+        COMMENT "Copying QWindowKit runtime libraries"
+    )
+endif()
+
 target_include_directories(desktop PRIVATE
     ${CMAKE_SOURCE_DIR}
 )
