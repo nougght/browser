@@ -117,7 +117,7 @@ void TabBarWithControl::setupUI() {
             [this] { emit this->minimiseClicked(); });
     _maximizeButton = new QPushButton("");
     _maximizeButton->setObjectName("maximizeButton");
-    _maximizeButton->setProperty("maximized", false);
+    _maximizeButton->setProperty("maximised", false);
     connect(_maximizeButton, &QPushButton::clicked, this,
             &TabBarWithControl::_onMaximizeClicked);
     _setMaximized(false);

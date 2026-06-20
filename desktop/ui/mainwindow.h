@@ -111,6 +111,6 @@ private:
     QWebEngineProfile* _profile;
     QStackedWidget *_stackedWidget;
 
-    std::map<TabId, QWebEngineView *> _tabWidgets;
+    std::map<TabId, QWebEngineView *> _tabViews;
 };
 #endif // MAINWINDOW_H

@@ -58,6 +58,7 @@ qt_add_executable(desktop
         MANUAL_FINALIZATION
         ${PROJECT_SOURCES}
         ui/bookmarkdelegate.h ui/bookmarkdelegate.cpp
+        ui/webenginepage.cpp ui/webenginepage.h
 
 
 

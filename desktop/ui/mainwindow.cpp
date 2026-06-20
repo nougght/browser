@@ -1,5 +1,6 @@
 #include "mainwindow.h"
 #include "browsermenu.h"
+#include "ui/webenginepage.h"
 #include <QFile>
 #include <QPainter>
 #include <QPainterPath>
@@ -218,23 +219,24 @@ void MainWindow::setupEvents() {
 void MainWindow::setupTabViewEvents(TabId tabId, QWebEngineView *tabView) {
     tabView->setObjectName("tabView");
     // настраиваем сигналы при различных событиях от движка
-    connect(tabView, &QWebEngineView::urlChanged, this,
+    connect(tabView->page(), &QWebEnginePage::urlChanged, this,
             [this, id = tabId](QUrl url) { emit engineUrlChanged(id, url); });
 
-    connect(tabView, &QWebEngineView::titleChanged, this,
+    connect(tabView->page(), &QWebEnginePage::titleChanged, this,
             [this, id = tabId](QString title) {
         emit engineTitleChanged(id, title);
     });
 
-    connect(tabView, &QWebEngineView::loadStarted, this,
+    connect(tabView->page(), &QWebEnginePage::loadStarted, this,
             [this, id = tabId]() { emit loadStarted(id); });
 
-    connect(tabView, &QWebEngineView::loadFinished, this,
+    connect(tabView->page(), &QWebEnginePage::loadFinished, this,
             [this, id = tabId]() { emit loadFinished(id); });
 
     connect(
-        tabView, &QWebEngineView::loadProgress, this,
+        tabView->page(), &QWebEnginePage::loadProgress, this,
         [this, id = tabId](int progress) { emit loadProgress(id, progress); });
+
 
     connect(tabView, &QObject::destroyed, []{
         qDebug() << "view destroyed";
@@ -245,7 +247,7 @@ void MainWindow::setupTabViewEvents(TabId tabId, QWebEngineView *tabView) {
 }
 
 void MainWindow::visitUrl(TabInfo tab, bool isBookmarked) {
-    _tabWidgets[tab.id]->load(convert(tab.url));
+    _tabViews[tab.id]->load(convert(tab.url));
     switchActiveTabBookmark(isBookmarked);
 }
 
@@ -259,16 +261,16 @@ void MainWindow::showBookmarksPage() {
     _stackedWidget->setCurrentWidget(_bookmarksPage);
 }
 
-void MainWindow::reloadTab(TabId id) { _tabWidgets[id]->reload(); }
+void MainWindow::reloadTab(TabId id) { _tabViews[id]->reload(); }
 
 void MainWindow::navigateBack(TabInfo tabInfo, bool isBookmarked) {
-    _tabWidgets[tabInfo.id]->back();
+    _tabViews[tabInfo.id]->back();
     switchActiveTabBookmark(isBookmarked);
     // _tabBar->updateTabNavigation(tabInfo.id, tabInfo.canGoBack,
     // tabInfo.canGoForward);
 }
 void MainWindow::navigateForward(TabInfo tabInfo, bool isBookmarked) {
-    _tabWidgets[tabInfo.id]->forward();
+    _tabViews[tabInfo.id]->forward();
     switchActiveTabBookmark(isBookmarked);
     // _tabBar->updateTabNavigation(tabInfo.id, tabInfo.canGoBack,
     // tabInfo.canGoForward);
@@ -277,16 +279,16 @@ void MainWindow::navigateForward(TabInfo tabInfo, bool isBookmarked) {
 // add multiple tabs
 void MainWindow::addTabs(std::vector<TabInfo> tabs) {
     for (int i = 0; i < tabs.size(); ++i) {
-        auto tabWidget = new QWebEngineView();
-        auto page = new QWebEnginePage(_profile, tabWidget);
-        tabWidget->setPage(page);
+        auto view = new QWebEngineView();
+        auto page = new QWebEnginePage(_profile, view);
+        view->setPage(page);
 
-        _stackedWidget->addWidget(tabWidget);
+        _stackedWidget->addWidget(view);
 
-        setupTabViewEvents(tabs[i].id, tabWidget);
+        setupTabViewEvents(tabs[i].id, view);
 
-        tabWidget->load(convert(tabs[i].url));
-        _tabWidgets[tabs[i].id] = std::move(tabWidget);
+        view->load(convert(tabs[i].url));
+        _tabViews[tabs[i].id] = std::move(view);
     }
     TabId lastId = tabs.back().id;
     // _tabBar->setInitialTabs(std::move(tabs));
@@ -296,31 +298,33 @@ void MainWindow::addTabs(std::vector<TabInfo> tabs) {
 void MainWindow::addTab(TabInfo tabInfo) {
     // _tabBar->addTab(tabInfo);
 
-    auto tabWidget = new QWebEngineView(this);
+    auto view = new QWebEngineView(this);
+    auto page = new WebEnginePage(_profile, view);
+    view->setPage(page);
 
-    _stackedWidget->addWidget(tabWidget);
+    _stackedWidget->addWidget(view);
 
-    setupTabViewEvents(tabInfo.id, tabWidget);
-    tabWidget->load(convert(tabInfo.url));
-    _tabWidgets[tabInfo.id] = std::move(tabWidget);
+    setupTabViewEvents(tabInfo.id, view);
+    view->load(convert(tabInfo.url));
+    _tabViews[tabInfo.id] = std::move(view);
 
 }
 
 void MainWindow::closeTab(TabId id) {
-    if (_tabWidgets.count(id) == 0)
+    if (_tabViews.count(id) == 0)
         return;
 
-    auto tab = _tabWidgets[id];
+    auto tab = _tabViews[id];
     _stackedWidget->removeWidget(tab);
-    _tabWidgets.erase(id);
+    _tabViews.erase(id);
     tab->deleteLater();
 }
 
 
 // switch active tab
 void MainWindow::switchToTab(TabInfo tabInfo, bool isBookmarked) {
-    auto it = _tabWidgets.find(tabInfo.id);
-    if (it != _tabWidgets.end()) {
+    auto it = _tabViews.find(tabInfo.id);
+    if (it != _tabViews.end()) {
         _stackedWidget->setCurrentWidget(it->second);
 
         it->second->setFocus();
