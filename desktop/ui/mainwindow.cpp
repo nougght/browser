@@ -8,7 +8,7 @@
 #include <QVBoxLayout>
 #include <QWebEngineProfile>
 #include <QWebEngineNavigationRequest>
-#include <Qt>
+#include <QWebEngineNewWindowRequest>
 
 #include <core/eventArgs.h>
 #include <core/models.h>
@@ -256,6 +256,32 @@ void MainWindow::setupTabViewEvents(TabId tabId, QWebEngineView *tabView) {
                     return;
                  }
                  emit navigationRequested(type, id, url.value());
+            });
+
+    connect(tabView->page(), &QWebEnginePage::newWindowRequested, this,
+            [this, id = tabId](QWebEngineNewWindowRequest &request) { 
+                qDebug() << "new window requested " << request.requestedUrl().toString();
+                auto url = Url::parse(request.requestedUrl().toString().toStdString());
+                if (!url.has_value()) {
+                    qDebug() << "new window requested: invalid url";
+                    return;
+                }
+                switch (request.destination()) {
+                    case QWebEngineNewWindowRequest::DestinationType::InNewTab:{
+                        emit newTabRequested(url.value(), false);
+                            break;
+                    }
+                    case QWebEngineNewWindowRequest::DestinationType::InNewWindow:
+                        qDebug() << "new window requested: in new window";
+                        break;
+                    case QWebEngineNewWindowRequest::DestinationType::InNewDialog:
+                        qDebug() << "new window requested: in new dialog";
+                        break;
+                    case QWebEngineNewWindowRequest::DestinationType::InNewBackgroundTab:
+                        qDebug() << "new window requested: in new background tab";
+                        emit newTabRequested(url.value(), true);
+                        break;
+                }
             });
 
     connect(tabView->page(), &QWebEnginePage::urlChanged, this,

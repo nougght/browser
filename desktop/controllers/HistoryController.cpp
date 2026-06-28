@@ -61,7 +61,12 @@ void HistoryController::onEntryClicked(int index)
         qDebug() << "history controller entry clicked not found: " << index;
         return;
     }
-    _coreAdapter->createTab(QUrl(QString::fromStdString(optionalEntry.value().url)));
+    auto url = Url::parse(optionalEntry.value().url);
+    if (!url.has_value()) {
+        qDebug() << "history controller entry clicked: invalid url";
+        return;
+    }
+    _coreAdapter->createTab(url.value(), false);
 }
 
 void HistoryController::onDeleteClicked(int index)

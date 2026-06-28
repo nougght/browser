@@ -37,14 +37,17 @@ void TabManager::loadTabs() {
 }
 
 // create new tab with optional url
-TabId TabManager::createTab(Url url) {
+TabId TabManager::createTab(Url url, bool isBackground) {
     auto tab = std::make_unique<Tab>(_idGenerator.create());
     TabId id = tab->getId();
     _tabs.emplace(id, std::move(tab));
     _tabsOrder.push_back(id);
 
     tabCreated.invoke(getTab(id)->toTabInfo());
-    changeActiveTab(id);
+    
+    if (!isBackground) {
+        changeActiveTab(id);
+    }
 
     if (!url.isEmpty() && !url.isInternal()) {
         _visitUrl(id, url);
@@ -52,6 +55,9 @@ TabId TabManager::createTab(Url url) {
     return id;
 }
 
+TabId TabManager::createTab(bool isBackground) {
+    return createTab(_newTabUrl(), isBackground);
+}
 
 void TabManager::closeTab(TabId id) {
     auto it = std::find(_tabsOrder.begin(), _tabsOrder.end(), id);
@@ -218,7 +224,7 @@ void TabManager::openInternalPage(InternalPageType type, bool isNewTab) {
     }
     TabId id;
     if (isNewTab) {
-        id = createTab(url.value());
+        id = createTab(url.value(), false);
     } else {
         id = _activeTabId;
     }

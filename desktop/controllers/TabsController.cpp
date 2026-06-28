@@ -80,6 +80,11 @@ void TabsController::onNavigationRequested(NavigationType type, TabId id, Url ur
     _coreAdapter->handleNavigationRequested(type, id, url);
 }
 
+void TabsController::onNewTabRequested(Url url, bool isBackground)
+{
+    qDebug() << "\nNew tab requested: " << QString::fromStdString(url.toStdString()) << " is background: " << isBackground;
+    _coreAdapter->createTab(url, isBackground);
+}
 // redirect
 void TabsController::onEngineUrlChanged(TabId id, QUrl newUrl)
 {

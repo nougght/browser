@@ -64,9 +64,13 @@ void BookmarkController::onBookmarkEntryClicked(int index) {
         qDebug() << "\n bookmark controller bookmark entry clicked not found\n";
         return;
     }
-    auto url = optionalUrl.value();
-    _coreAdapter->createTab(QUrl(QString::fromStdString(url)));
-    qDebug() << "\n bookmark controller bookmark entry clicked: " << index << " url = " << url << "\n";
+    auto url = Url::parse(optionalUrl.value());
+    if (!url.has_value()) {
+        qDebug() << "bookmark controller bookmark entry clicked: invalid url";
+        return;
+    }
+    _coreAdapter->createTab(url.value(), false);
+    qDebug() << "\n bookmark controller bookmark entry clicked: " << index << " url = " << url.value().toStdString() << "\n";
 }
 
 void BookmarkController::onDeleteBookmarkClicked(int index) {

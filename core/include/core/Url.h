@@ -1,6 +1,8 @@
 #ifndef URL_H
 #define URL_H
 
+#include <fstream>
+#include <ostream>
 #include <string>
 #include <optional>
 
@@ -77,7 +79,7 @@ public:
     }
 
     bool operator==(const Url& other) const;
-
+    
     std::string toStdString() const
     {
         return _value;
@@ -113,6 +115,9 @@ public:
 
 };
 
+inline std::ostream& operator<<(std::ostream &out, Url url) {
+    out << url.toStdString();
+}
 
 std::string getInternalPageTypeTitle(InternalPageType type);
 std::optional<Url> getInternalPageTypeUrl(InternalPageType type, Url newTabPageUrl = Url());

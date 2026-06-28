@@ -61,8 +61,8 @@ signals:
 
 public slots:
     void loadTabs();
-    void createTab(QUrl url);
-    void createTab();
+    void createTab(Url url, bool isBackground);
+    void createTab(bool isBackground);
     void closeTab(TabId id);
     void changeActiveTab(TabId id);
     void moveTab(TabId id, int newIndex);

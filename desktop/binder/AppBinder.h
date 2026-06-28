@@ -85,6 +85,8 @@ public:
 
         QObject::connect(mainWindow, &MainWindow::navigationRequested,
                          tabsController, &TabsController::onNavigationRequested);
+        QObject::connect(mainWindow, &MainWindow::newTabRequested, tabsController,
+                         &TabsController::onNewTabRequested);
         QObject::connect(mainWindow, &MainWindow::engineUrlChanged,
                          tabsController, &TabsController::onEngineUrlChanged);
         QObject::connect(mainWindow, &MainWindow::engineTitleChanged,

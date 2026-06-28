@@ -236,9 +236,9 @@ void BrowserCore::loadTabs() {
     //       { tabsLoaded.invoke(_tabManager->getTabInfos()); });
 }
 
-void BrowserCore::createTab(Url url) {
-    post([this, url = std::move(url)] {
-        TabId id = _tabManager->createTab(url);
+void BrowserCore::createTab(Url url, bool isBackground) {
+    post([this, url = std::move(url), isBackground] {
+        TabId id = _tabManager->createTab(url, isBackground);
         // TabInfo tabInfo = _tabManager->getTab(id)->toTabInfo();
         // tabCreated.invoke(tabInfo);
         // navigationCompleted.invoke(NavigationCompletedArgs{NavigationType::NewPage,
@@ -246,8 +246,8 @@ void BrowserCore::createTab(Url url) {
     });
 }
 
-void BrowserCore::createTab() {
-    post([this] { _tabManager->createTab(); });
+void BrowserCore::createTab(bool isBackground) {
+    post([this, isBackground] { _tabManager->createTab(isBackground); });
 }
 
 void BrowserCore::closeTab(TabId id) {

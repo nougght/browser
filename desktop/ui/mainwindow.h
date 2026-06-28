@@ -49,6 +49,7 @@ signals:
     void searchClicked(QString searchQuery);
 
     void navigationRequested(NavigationType type, TabId id, Url url);
+    void newTabRequested(Url url, bool isBackground);
     void engineUrlChanged(TabId id, QUrl newUrl);
     void engineTitleChanged(TabId id, QString newTitle);
     void loadStarted(TabId id);

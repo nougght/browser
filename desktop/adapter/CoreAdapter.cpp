@@ -172,9 +172,9 @@ void CoreAdapter::deleteBookmark(int64_t id) { _core->deleteBookmark(id); }
 
 
 void CoreAdapter::loadTabs() { _core->loadTabs(); }
-void CoreAdapter::createTab(QUrl url) { _core->createTab(convert(url)); }
+void CoreAdapter::createTab(Url url, bool isBackground) { _core->createTab(url, isBackground); }
 
-void CoreAdapter::createTab() { _core->createTab(); }
+void CoreAdapter::createTab(bool isBackground) { _core->createTab(isBackground); }
 
 void CoreAdapter::closeTab(TabId id) { _core->closeTab(id); }
 

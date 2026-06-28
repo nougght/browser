@@ -15,8 +15,8 @@ class IBrowserCore : public ICoreDispatcher {
 public:
     // tabs
     virtual void loadTabs() = 0;
-    virtual void createTab(Url url) = 0;
-    virtual void createTab() = 0;
+    virtual void createTab(Url url, bool isBackground) = 0;
+    virtual void createTab(bool isBackground) = 0;
     virtual void closeTab(TabId id) = 0;
     virtual void changeActiveTab(TabId id) = 0;
     virtual void moveTab(TabId id, int newIndex) = 0;

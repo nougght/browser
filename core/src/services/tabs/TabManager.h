@@ -37,7 +37,8 @@ public:
     void handleSearchQuery(TabId id, std::string query);
     void openInternalPage(InternalPageType type, bool isNewTab = true);
 
-    TabId createTab(Url url = Url());
+    TabId createTab(Url url, bool isBackground);
+    TabId createTab(bool isBackground);
     void closeTab(TabId id);
     TabId getActiveTabId();
     void changeActiveTab(TabId id);

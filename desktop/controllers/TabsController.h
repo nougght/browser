@@ -37,6 +37,7 @@ public:
     void onSearchRequested(QString searchQuery);
 
     void onNavigationRequested(NavigationType type, TabId id, Url url);
+    void onNewTabRequested(Url url, bool isBackground);
     void onEngineUrlChanged(TabId id, QUrl newUrl);
     void onEngineTitleChanged(TabId id, QString newTitle);
     void onLoadStarted(TabId id);

@@ -67,8 +67,8 @@ public:
 
     // tabs
     void loadTabs() override;
-    void createTab(Url url) override;
-    void createTab() override;
+    void createTab(Url url, bool isBackground) override;
+    void createTab(bool isBackground) override;
     void closeTab(TabId id) override;
     void changeActiveTab(TabId id) override;
     void moveTab(TabId id, int newIndex) override;
