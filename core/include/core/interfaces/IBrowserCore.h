@@ -23,6 +23,7 @@ public:
     virtual void goForward(TabId id) = 0;
     virtual void goBack(TabId id) = 0;
     virtual void handleSearchQuery(TabId id, std::string query) = 0;
+    virtual void handleNavigationRequested(NavigationType type, TabId id, Url url) = 0;
     virtual void openInternalPage(InternalPageType type, bool isNewTab = true) = 0;
     // virtual void visitUrl(TabId id, Url url) = 0;
 
@@ -54,7 +55,8 @@ public:
     Event<TabInfo> tabCreated;
 
     // переходы в рамках одной вкладки
-    Event<NavigationRequestedArgs> navigationRequested;
+    Event<NavigationCommandArgs> navigationCommand;
+    Event<NavigationCompletedArgs> navigationCompleted;
 
     Event<TabTitleChangedArgs> titleChanged;
 

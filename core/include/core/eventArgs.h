@@ -10,12 +10,18 @@
 
 
 
-struct NavigationRequestedArgs
+struct NavigationCommandArgs
+{
+    NavigationType type;
+    TabId tabId;
+    Url url;
+};
+
+struct NavigationCompletedArgs
 {
     NavigationType type;
     TabInfo tabInfo;
 };
-
 struct TabMovedArgs
 {
     TabId id;

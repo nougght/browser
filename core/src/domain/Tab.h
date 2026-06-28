@@ -49,7 +49,8 @@ public:
     // Event<bool> canGoForwardChanged;
     // Event<TabInfo> wentBack;
     // Event<TabInfo> wentForward;
-    Event<NavigationRequestedArgs> NavigationRequested;
+    // Event<NavigationRequestedArgs> NavigationRequested;
+    
     Event<Url> urlVisited;
     Event<Url> urlChanged;
     Event<std::string> titleChanged;

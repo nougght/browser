@@ -18,7 +18,10 @@ public:
     void onTabClosed(TabId id);
     void onLastTabClosed();
     void onActiveTabChanged(TabId id);
-    void onNavigationRequested(NavigationRequestedArgs args);
+
+    void onNavigationCommand(NavigationCommandArgs args);
+    void onNavigationCompleted(NavigationCompletedArgs args);
+
     void onTabTitleChanged(TabTitleChangedArgs args);
     void onLoadingStatusChanged(TabLoadingStatusChangedArgs args);
     void onLoadingProgressChanged(TabLoadingProgressChangedArgs args);
@@ -32,6 +35,8 @@ public:
 
     // slots for ui signals
     void onSearchRequested(QString searchQuery);
+
+    void onNavigationRequested(NavigationType type, TabId id, Url url);
     void onEngineUrlChanged(TabId id, QUrl newUrl);
     void onEngineTitleChanged(TabId id, QString newTitle);
     void onLoadStarted(TabId id);
@@ -45,10 +50,15 @@ public:
     void onForwardClicked();
 
 signals:
-    void urlVisitRequested(TabInfo tab, bool isBookmarked);
-    void backNavigationRequested(TabInfo tab, bool isBookmarked);
-    void forwardNavigationRequested(TabInfo tab, bool isBookmarked);
-    void reloadRequested(TabId tabId);
+    // navigation commands
+    void urlVisitCommand(TabId tabId, Url url);
+    void backNavigationCommand(TabId tabId);
+    void forwardNavigationCommand(TabId tabId);
+    void reloadCommand(TabId tabId);
+
+    // navigation completed notification
+    void navigationCompleted(NavigationCompletedArgs args, bool isBookmarked);
+    
 
     void activeTabUrlChanged(Url newUrl);
     void backNavigationAvailabilityChanged(bool canGoBack);

@@ -20,6 +20,7 @@ enum class NavigationType {
     NewPage,        // явный переход по новой ссылке
     Back,           // переход по истории назад
     Forward,        // переход по истории вперед
+    BackForwardCompleted,
     Reload,         // перезагрузка страницы
     Redirect,       // редирект движка
     InternalPage    // внутренняя страница

@@ -41,10 +41,16 @@ BrowserCore::BrowserCore()
             std::make_unique<Subscription<void>>(_tabManager->lastTabClosed.subscribe(
                 [this]() { lastTabClosed.invoke(); })));
 
-        _subs.push_back(std::make_unique<Subscription<NavigationRequestedArgs>>(
-            _tabManager->navigationRequested.subscribe(
-                [this](NavigationRequestedArgs args) {
-                    navigationRequested.invoke(args);
+        _subs.push_back(std::make_unique<Subscription<NavigationCommandArgs>>(
+            _tabManager->navigationCommand.subscribe(
+                [this](NavigationCommandArgs args) {
+                    navigationCommand.invoke(args);
+                })));
+
+        _subs.push_back(std::make_unique<Subscription<NavigationCompletedArgs>>(
+            _tabManager->navigationCompleted.subscribe(
+                [this](NavigationCompletedArgs args) {
+                    navigationCompleted.invoke(args);
                 })));
 
 
@@ -69,11 +75,14 @@ BrowserCore::BrowserCore()
         // history
 
         // обработка событий с вкладками для истории
-        _subs.push_back(std::make_unique<Subscription<NavigationRequestedArgs>>(
-            this->navigationRequested.subscribe(
-                [this](NavigationRequestedArgs args) {
+
+        // обновление истории после выполнения навигации
+        _subs.push_back(std::make_unique<Subscription<NavigationCompletedArgs>>(
+            _tabManager->navigationCompleted.subscribe(
+                [this](NavigationCompletedArgs args) {
                     _historyService->onNavigation(args);
                 })));
+
         _subs.push_back(std::make_unique<Subscription<TabTitleChangedArgs>>(
             _tabManager->titleChanged.subscribe(
                 [this](TabTitleChangedArgs args) { _historyService->onTabTitleChanged(args.id, args.newTitle); })));
@@ -259,6 +268,13 @@ void BrowserCore::handleSearchQuery(TabId id, std::string query) {
     });
 }
 
+void BrowserCore::handleNavigationRequested(NavigationType type, TabId id, Url url) {
+    post([this, type, id, url] {
+        if (!id.isValid())
+            return;
+        _tabManager->onNavigationRequested(type, id, url);
+    });
+}
 
 void BrowserCore::openInternalPage(InternalPageType type, bool isNewTab)
 {

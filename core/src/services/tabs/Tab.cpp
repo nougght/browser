@@ -78,9 +78,6 @@ void Tab::goBack()
 
     _url = _history.currentItem()->url;
     _title = _history.currentItem()->title;
-
-
-    NavigationRequested.invoke(NavigationRequestedArgs{NavigationType::Back, toTabInfo()});
 }
 
 // void Tab::goBack()
@@ -115,7 +112,6 @@ void Tab::goForward()
     _url = _history.currentItem()->url;
     _title = _history.currentItem()->title;
 
-    NavigationRequested.invoke(NavigationRequestedArgs{NavigationType::Forward, toTabInfo()});
 }
 
 void Tab::changeTitle(const std::string &title)

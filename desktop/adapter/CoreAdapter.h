@@ -41,7 +41,8 @@ signals:
     void tabClosed(TabId id);
     void lastTabClosed();
     void activeTabChanged(TabId id);
-    void navigationRequested(NavigationRequestedArgs args);
+    void navigationCommand(NavigationCommandArgs args);
+    void navigationCompleted(NavigationCompletedArgs args);
     void titleChanged(TabTitleChangedArgs args);
     void loadingStatusChanged(TabLoadingStatusChangedArgs args);
     void loadingProgressChanged(TabLoadingProgressChangedArgs args);
@@ -69,6 +70,8 @@ public slots:
     void goBack(TabId id);
     void handleSearchQuery(TabId id, std::string query);
     void openInternalPage(InternalPageType type, bool isNewTab);
+    
+    void handleNavigationRequested(NavigationType type, TabId id, Url url);
     void changeTabUrl(TabId id, QUrl url);
     void changeTabTitle(TabId id, QString title);
     void changeTabLoadingProgress(TabId id, int progress);

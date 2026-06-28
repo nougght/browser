@@ -32,7 +32,7 @@ void HistoryService::_addVisit(TabId tabId, Url url, std::string title) {
     });
 }
 
-void HistoryService::onNavigation(NavigationRequestedArgs args) {
+void HistoryService::onNavigation(NavigationCompletedArgs args) {
     // don't add internal pages to history
     if (args.tabInfo.url.isInternal())
     {

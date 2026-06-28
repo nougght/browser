@@ -52,7 +52,7 @@ public:
     void goBack(TabId id);
     void goForward(TabId id);
 
-    
+    void onNavigationRequested(NavigationType type, TabId id, Url url);
     void onEngineUrlChanged(TabId id, Url url);
     void onEngineTitleChanged(TabId id, std::string title);
     
@@ -67,7 +67,8 @@ public:
     Event<TabInfo> tabCreated;
 
     // переходы в рамках одной вкладки
-    Event<NavigationRequestedArgs> navigationRequested;
+    Event<NavigationCommandArgs> navigationCommand;
+    Event<NavigationCompletedArgs> navigationCompleted;
 
     Event<TabTitleChangedArgs> titleChanged;
 

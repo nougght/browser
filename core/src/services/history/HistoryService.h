@@ -23,7 +23,7 @@ public:
     HistoryService(IHistoryRepository *historyRepo);
 
     // обработчики событий
-    void onNavigation(NavigationRequestedArgs args);
+    void onNavigation(NavigationCompletedArgs args);
     void onTabTitleChanged(TabId id, std::string title);
     void onTabLoaded(TabId id);
     void onTabClosed(TabId id);

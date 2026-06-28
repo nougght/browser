@@ -14,6 +14,7 @@
 #include "bookmarkspage.h"
 #include "browsermenu.h"
 #include "core/Identifier.h"
+#include "core/eventArgs.h"
 #include "historypage.h"
 #include "searchbar.h"
 #include "tabbarwithcontrol.h"
@@ -46,6 +47,8 @@ signals:
 
     
     void searchClicked(QString searchQuery);
+
+    void navigationRequested(NavigationType type, TabId id, Url url);
     void engineUrlChanged(TabId id, QUrl newUrl);
     void engineTitleChanged(TabId id, QString newTitle);
     void loadStarted(TabId id);
@@ -72,14 +75,14 @@ public slots:
     void updateUrlBar(Url newUrl);
     // void updateTabTitle(TabId id, std::string title);
     void reloadTab(TabId id);
-    void navigateBack(TabInfo tabInfo, bool isBookmarked);
-    void navigateForward(TabInfo tabInfo, bool isBookmarked);
-    void visitUrl(TabInfo tab, bool isBookmarked);
-
+    void navigateBack(TabId tabId);
+    void navigateForward(TabId tabId);
+    void visitUrl(TabId tabId, Url url);
+    
+    void onNavigationCompleted(NavigationCompletedArgs args, bool isBookmarked);
 
     // TODO: move to navigation controller
-    void showHistoryPage();
-    void showBookmarksPage();
+    void showInternalPage(InternalPageType type);
 
     void switchActiveTabBookmark(bool isBookmarked);
 

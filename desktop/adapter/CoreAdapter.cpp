@@ -40,14 +40,21 @@ void CoreAdapter::_setupEvents() {
         })));
 
     _subscriptions.push_back(
-        std::make_unique<Subscription<NavigationRequestedArgs>>(
-            _core->navigationRequested.subscribe(
-                [this](NavigationRequestedArgs args) {
+        std::make_unique<Subscription<NavigationCommandArgs>>(
+            _core->navigationCommand.subscribe(
+                [this](NavigationCommandArgs args) {
                 QMetaObject::invokeMethod(
                         this,
-                        [this, args]() { emit this->navigationRequested(args); },
+                        [this, args]() { emit this->navigationCommand(args); },
                         Qt::QueuedConnection);
                 })));
+
+    _subscriptions.push_back(std::make_unique<Subscription<NavigationCompletedArgs>>(
+        _core->navigationCompleted.subscribe([this](NavigationCompletedArgs args) {
+            QMetaObject::invokeMethod(
+                this, [this, args]() { emit this->navigationCompleted(args); },
+                Qt::QueuedConnection);
+        })));
 
     _subscriptions.push_back(std::make_unique<Subscription<TabTitleChangedArgs>>(
         _core->titleChanged.subscribe([this](TabTitleChangedArgs args) {
@@ -109,7 +116,7 @@ void CoreAdapter::_setupEvents() {
                 this, [this, entry]() { emit this->historyEntryUpdated(entry); },
                 Qt::QueuedConnection);
         })));
-        
+
     _subscriptions.push_back(std::make_unique<Subscription<int64_t>>(
         _core->historyEntryDeleted.subscribe([this](int64_t id) {
             QMetaObject::invokeMethod(
@@ -188,6 +195,10 @@ void CoreAdapter::handleSearchQuery(TabId id, std::string query) {
 
 void CoreAdapter::openInternalPage(InternalPageType type, bool isNewTab) {
     _core->openInternalPage(type, isNewTab);
+}
+
+void CoreAdapter::handleNavigationRequested(NavigationType type, TabId id, Url url) {
+    _core->handleNavigationRequested(type, id, url);
 }
 
 void CoreAdapter::changeTabUrl(TabId id, QUrl url) {
