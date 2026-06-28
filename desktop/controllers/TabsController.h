@@ -50,7 +50,7 @@ signals:
     void forwardNavigationRequested(TabInfo tab, bool isBookmarked);
     void reloadRequested(TabId tabId);
 
-    void activeTabUrlChanged(QUrl newUrl);
+    void activeTabUrlChanged(Url newUrl);
     void backNavigationAvailabilityChanged(bool canGoBack);
     void forwardNavigationAvailabilityChanged(bool canGoForward);
 

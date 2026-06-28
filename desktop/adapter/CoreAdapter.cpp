@@ -173,16 +173,21 @@ void CoreAdapter::goForward(TabId id) { _core->goForward(id); }
 
 void CoreAdapter::goBack(TabId id) { _core->goBack(id); }
 
-void CoreAdapter::visitUrl(TabId id, QUrl url) {
-    _core->visitUrl(id, convert(url));
+void CoreAdapter::handleSearchQuery(TabId id, std::string query) {
+    // _core->visitUrl(id, convert(url));
+    _core->handleSearchQuery(id, query);
+}
+
+void CoreAdapter::openInternalPage(InternalPageType type, bool isNewTab) {
+    _core->openInternalPage(type, isNewTab);
 }
 
 void CoreAdapter::changeTabUrl(TabId id, QUrl url) {
-    _core->changeTabUrl(id, convert(url));
+    _core->onEngineUrlChanged(id, convert(url));
 }
 
 void CoreAdapter::changeTabTitle(TabId id, QString title) {
-    _core->changeTabTitle(id, title.toStdString());
+    _core->onEngineTitleChanged(id, title.toStdString());
 }
 
 void CoreAdapter::changeTabLoadingProgress(TabId id, int progress) {

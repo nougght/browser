@@ -100,6 +100,7 @@ target_link_libraries(desktop PRIVATE
     browser_core
     )
 
+# копирование dll рядом с exe
 if(WIN32 AND TARGET QWKWidgets)
     add_custom_command(TARGET desktop POST_BUILD
         COMMAND ${CMAKE_COMMAND} -E copy_if_different

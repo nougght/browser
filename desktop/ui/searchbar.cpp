@@ -8,6 +8,7 @@ SearchBar::SearchBar() {
 
     _search = new QLineEdit();
     this->setObjectName("searchBar");
+    _search->setPlaceholderText("Введите запрос или адрес сайта");
     _search->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
     _search->setFrame(false);
     connect(_search, &QLineEdit::returnPressed, this,

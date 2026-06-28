@@ -5,6 +5,10 @@ HistoryService::HistoryService(IHistoryRepository *historyRepo)
 
 void HistoryService::onNavigation(NavigationRequestedArgs args) {
     if (args.type == NavigationType::NewPage) {
+        if (args.tabInfo.url.isInternal())
+        {
+            // return;
+        }
         std::cerr << "history service add visit\n";
         auto entry = HistoryEntry{0, args.tabInfo.url.toStdString(), args.tabInfo.title, 0};
         _historyRepo->addVisit(entry, 
@@ -23,6 +27,45 @@ void HistoryService::onNavigation(NavigationRequestedArgs args) {
     }
 }
 
+void HistoryService::onTabLoaded(TabId id){
+    _loadingTabHistoryId.erase(id);
+}
+
+void HistoryService::onTabTitleChanged(TabId id, std::string title){
+    auto it = _loadingTabHistoryId.find(id);
+    if (it != _loadingTabHistoryId.end()) {
+        auto historyId = it->second;
+        auto entry = HistoryEntry{historyId, title};
+        _historyRepo->updateEntry(entry, [this, entry](RepositoryError error) {
+            if (error.code == RepositoryErrorCode::Success) {
+                std::printf("service update entry success\n");
+                entryUpdated.invoke(entry);
+            } else {
+                std::printf("service update entry error: %s\n", error.message.c_str());
+            }
+        });
+    } else {
+        std::printf("service update entry error: tab not found");
+    }
+}
+
+void HistoryService::onTabRedirected(TabId id, Url url){
+    auto it = _loadingTabHistoryId.find(id);
+    if (it != _loadingTabHistoryId.end()) {
+        auto historyId = it->second;
+        auto entry = HistoryEntry{historyId, url.toStdString()};
+        _historyRepo->updateEntry(entry, [this, entry](RepositoryError error) {
+            if (error.code == RepositoryErrorCode::Success) {
+                std::printf("service update entry success\n");
+                entryUpdated.invoke(entry);
+            } else {
+                std::printf("service update entry error: %s\n", error.message.c_str());
+            }
+        });
+    } else {
+        std::printf("service update entry error: tab not found");
+    }
+}
 void HistoryService::loadHistory() {
     _historyRepo->getHistory([this](std::vector<HistoryEntry> historyList, RepositoryError error) {
         std::cerr << "\nservice load history\n";

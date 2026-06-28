@@ -69,7 +69,7 @@ public slots:
     void setBackButtonEnabled(bool enabled);
     void setForwardButtonEnabled(bool enabled);
 
-    void updateUrlBar(QUrl newUrl);
+    void updateUrlBar(Url newUrl);
     // void updateTabTitle(TabId id, std::string title);
     void reloadTab(TabId id);
     void navigateBack(TabInfo tabInfo, bool isBookmarked);

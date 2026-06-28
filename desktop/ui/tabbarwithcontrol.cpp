@@ -5,6 +5,7 @@
 #include <QSizePolicy>
 #include <QSpacerItem>
 #include <QMouseEvent>
+#include <qtimer.h>
 
 
 TabBarWithControl::TabBarWithControl(QWidget *parent, QAbstractListModel *model)
@@ -52,7 +53,10 @@ void TabBarWithControl::setupUI() {
             return;
         if (topLeft.data(TabsModel::IsActiveRole).toBool())
             _tabsList->setCurrentIndex(topLeft);
-        _tabCountLabel->setText(QString::number(_tabsModel->rowCount()));
+        QTimer::singleShot(5, this, [this] {
+            int count = _tabsModel->rowCount();
+            _tabCountLabel->setText(QString::number(count));
+        });
     });
 
     _tabsList->setItemAlignment(Qt::AlignmentFlag::AlignCenter);

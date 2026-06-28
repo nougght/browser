@@ -22,9 +22,14 @@ public:
     virtual void moveTab(TabId id, int newIndex) = 0;
     virtual void goForward(TabId id) = 0;
     virtual void goBack(TabId id) = 0;
-    virtual void visitUrl(TabId id, Url url) = 0;
-    virtual void changeTabUrl(TabId id, Url url) = 0;
-    virtual void changeTabTitle(TabId id, std::string title) = 0;
+    virtual void handleSearchQuery(TabId id, std::string query) = 0;
+    virtual void openInternalPage(InternalPageType type, bool isNewTab = true) = 0;
+    // virtual void visitUrl(TabId id, Url url) = 0;
+
+    virtual void onEngineUrlChanged(TabId id, Url url) = 0;
+    virtual void onEngineTitleChanged(TabId id, std::string title) = 0;
+    
+
     virtual void changeTabLoadingProgress(TabId id, int progress) = 0;
     virtual void setTabLoadingStatus(TabId id, bool isLoading) = 0;
     virtual void reloadTab(TabId id) = 0;

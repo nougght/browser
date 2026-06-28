@@ -69,7 +69,7 @@ void TabsController::onSearchRequested(QString searchQuery)
     // goToWebsite(_search->text());
     qDebug() << "\nSearch requested: " << searchQuery;
     // qDebug() << "\nSIZE = " << _core->urlVisited.handlersSize();
-    _coreAdapter->visitUrl(_ctx->activeTabId(), searchQuery);
+    _coreAdapter->handleSearchQuery(_ctx->activeTabId(), searchQuery.toStdString());
 }
 
 // redirect
@@ -173,6 +173,7 @@ void TabsController::onNavigationRequested(NavigationRequestedArgs args)
     switch (args.type)
     {
     case NavigationType::NewPage:
+        _ctx->getTabsModel()->updateTabTitle(args.tabInfo.id, args.tabInfo.title);
         _ctx->getTabsModel()->updateTabUrl(args.tabInfo.id, args.tabInfo.url);
         _ctx->getTabsModel()->updateTabNavigation(args.tabInfo.id, args.tabInfo.canGoBack, args.tabInfo.canGoForward);
         emit urlVisitRequested(args.tabInfo, isBookmarked);
@@ -210,7 +211,15 @@ void TabsController::onTabsModelDataChanged(const QModelIndex &topLeft,
     }
     if (roles.contains(TabsModel::Roles::UrlRole))
     {
-        emit activeTabUrlChanged(_ctx->getTabsModel()->index(topLeft.row(), 0).data(TabsModel::UrlRole).toUrl());
+        auto url = _ctx->getTabsModel()->index(topLeft.row(), 0).data(TabsModel::UrlRole).toString().toStdString();
+        auto optionalUrl = Url::parse(url);
+        if (optionalUrl.has_value()) {
+            if (auto type = optionalUrl.value().getInternalPageType(); type.has_value() && type.value() == InternalPageType::NewTab) {
+                emit activeTabUrlChanged(Url());
+            } else {
+                emit activeTabUrlChanged(optionalUrl.value());
+            }
+        }
     }
     if (roles.contains(TabsModel::Roles::IsLoadingRole))
     {

@@ -7,6 +7,7 @@ class WebEnginePage : public QWebEnginePage {
     Q_OBJECT
 public:
     WebEnginePage(QWebEngineProfile *profile, QObject *parent = nullptr);
+    explicit WebEnginePage(QObject *parent = nullptr);
     ~WebEnginePage(){}
 private:
     bool acceptNavigationRequest(const QUrl &url, NavigationType type,

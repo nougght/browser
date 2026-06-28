@@ -27,7 +27,11 @@ public:
     }
     Url static convert(QUrl url)
     {
-        return Url(url.toString().toStdString());
+        auto optionalUrl = Url::parse(url.toString().toStdString());
+        if (!optionalUrl.has_value()) {
+            throw std::runtime_error("CoreAdapter convert QUrl to Url failed");
+        }
+        return optionalUrl.value();
     }
 
 signals:
@@ -62,7 +66,8 @@ public slots:
     void moveTab(TabId id, int newIndex);
     void goForward(TabId id);
     void goBack(TabId id);
-    void visitUrl(TabId id, QUrl url);
+    void handleSearchQuery(TabId id, std::string query);
+    void openInternalPage(InternalPageType type, bool isNewTab);
     void changeTabUrl(TabId id, QUrl url);
     void changeTabTitle(TabId id, QString title);
     void changeTabLoadingProgress(TabId id, int progress);

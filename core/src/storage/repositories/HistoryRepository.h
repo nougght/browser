@@ -13,6 +13,7 @@ public:
     HistoryRepository(DatabaseManager *dbManager, ICoreDispatcher *dispatcher);
 
     void addVisit(HistoryEntry &entry, HistoryAddedCallback callback) override;
+    void updateEntry(HistoryEntry &entry, HistoryUpdateCallback callback) override;
     void deleteEntry(int64_t id, HistoryDeletedCallback callback) override;
     void deleteAll(HistoryDeletedCallback callback) override;
 

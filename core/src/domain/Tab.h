@@ -3,13 +3,11 @@
 
 // #include "TabId.h"
 
-#include <core/Url.h>
-#include <core/Event.h>
-#include <core/eventArgs.h>
 #include "TabHistory.h"
 #include "core/Identifier.h"
-
-
+#include <core/Event.h>
+#include <core/Url.h>
+#include <core/eventArgs.h>
 
 // browser tab state with visit history
 class Tab {
@@ -22,12 +20,17 @@ private:
     int _loadingProgress;
 
 public:
-    Tab(TabId id, Url url);
+    explicit Tab(TabId id) : _id(id) {}
+    Tab(TabId id, Url url, std::string title = "");
     TabId getId();
     Url getUrl();
     std::string getTitle();
     bool isLoading();
     int getLoadingProgress();
+    bool isInternal() { return _url.isInternal(); }
+    std::optional<InternalPageType> getInternalPageType() {
+        return _url.getInternalPageType();
+    }
 
     TabInfo toTabInfo();
 
@@ -37,7 +40,7 @@ public:
     void goBack();
     void goForward();
 
-    void changeTitle(std::string &title);
+    void changeTitle(const std::string &title);
     void changeUrl(Url url);
     void changeLoadingProgress(int progress);
     void setLoadingStatus(bool isLoading);
@@ -47,7 +50,6 @@ public:
     // Event<TabInfo> wentBack;
     // Event<TabInfo> wentForward;
     Event<NavigationRequestedArgs> NavigationRequested;
-    // Event<
     Event<Url> urlVisited;
     Event<Url> urlChanged;
     Event<std::string> titleChanged;

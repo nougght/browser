@@ -21,6 +21,7 @@
 #include "services/tabs/TabManager.h"
 
 // TODO: add BrowserContext
+// TODO: navigation service
 
 // ядро браузера с встроенным циклом событий(event loop)
 class BrowserCore : public IBrowserCore {
@@ -31,7 +32,6 @@ private:
     // отключение event loop
     void _shutdownEventLoop();
 
-    //
     std::thread _eventLoopWorker;
 
     // очередь задач(событий)
@@ -74,9 +74,13 @@ public:
     void moveTab(TabId id, int newIndex) override;
     void goForward(TabId id) override;
     void goBack(TabId id) override;
-    void visitUrl(TabId id, Url url) override;
-    void changeTabUrl(TabId id, Url url) override;
-    void changeTabTitle(TabId id, std::string title) override;
+    void handleSearchQuery(TabId id, std::string query) override;
+    void openInternalPage(InternalPageType type, bool isNewTab = true) override;
+    // void visitUrl(TabId id, Url url) override;
+
+    void onEngineUrlChanged(TabId id, Url url) override;
+    void onEngineTitleChanged(TabId id, std::string title) override;
+
     void changeTabLoadingProgress(TabId id, int progress) override;
     void setTabLoadingStatus(TabId id, bool isLoading) override;
     void reloadTab(TabId id) override;
