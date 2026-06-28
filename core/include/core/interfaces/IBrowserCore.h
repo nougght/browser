@@ -84,6 +84,7 @@ public:
 
     Event<std::vector<HistoryEntry>> historyLoaded;
     Event<HistoryEntry> historyEntryAdded;
+    Event<HistoryEntry> historyEntryUpdated;
     Event<int64_t> historyEntryDeleted;
     Event<void> historyCleared;
 

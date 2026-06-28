@@ -13,7 +13,8 @@ public:
     HistoryRepository(DatabaseManager *dbManager, ICoreDispatcher *dispatcher);
 
     void addVisit(HistoryEntry &entry, HistoryAddedCallback callback) override;
-    void updateEntry(HistoryEntry &entry, HistoryUpdateCallback callback) override;
+    void updateUrl(int64_t id, std::string url, HistoryUpdateCallback callback) override;
+    void updateTitle(int64_t id, std::string title, HistoryUpdateCallback callback) override;
     void deleteEntry(int64_t id, HistoryDeletedCallback callback) override;
     void deleteAll(HistoryDeletedCallback callback) override;
 

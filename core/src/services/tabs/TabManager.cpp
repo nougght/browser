@@ -220,6 +220,11 @@ void TabManager::onEngineUrlChanged(TabId id, Url url) {
                 break;
         }
     }
+    
+    // если url тот же
+    if (existing->second->getUrl() == url) {
+        return;
+    }
     existing->second->changeUrl(url);
     navigationRequested.invoke(
         NavigationRequestedArgs{NavigationType::Redirect, getTab(id)->toTabInfo()});

@@ -12,6 +12,8 @@ void HistoryController::_setupEvents() {
             &HistoryController::onHistoryLoaded);
     connect(_coreAdapter, &CoreAdapter::historyEntryAdded, this,
             &HistoryController::onEntryAdded);
+    connect(_coreAdapter, &CoreAdapter::historyEntryUpdated, this,
+            &HistoryController::onEntryUpdated);
     connect(_coreAdapter, &CoreAdapter::historyEntryDeleted, this,
             &HistoryController::onEntryDeleted);
     connect(_coreAdapter, &CoreAdapter::historyCleared, this,
@@ -32,6 +34,11 @@ void HistoryController::onEntryAdded(HistoryEntry entry)
     emit entryAdded(entry);
 }
 
+void HistoryController::onEntryUpdated(HistoryEntry entry) {
+    qDebug() << "\n history controller entry updated\n";
+    _ctx->getHistoryModel()->updateEntry(entry);
+    emit entryUpdated(entry);
+}
 void HistoryController::onEntryDeleted(int64_t id) {
     qDebug() << "history controller entry deleted, id: " << id << "\n";
     _ctx->getHistoryModel()->removeEntry(id);

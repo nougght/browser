@@ -68,6 +68,20 @@ void HistoryModel::addEntries(std::vector<HistoryEntry> &entries)
     qDebug() << "\n entries added: " << _history.size() << "\n";
 }
 
+void HistoryModel::updateEntry(const HistoryEntry &entry) {
+    auto ind = _getIndexById(entry.id);
+    if (!ind.has_value()) {
+        qDebug() << "updateEntry entry not found: " << entry.id;
+        return;
+    }
+    if (!entry.title.empty() && entry.title != _history[ind.value()].title) {
+        _history[ind.value()].title = entry.title;
+    }
+    if (!entry.url.empty() && entry.url != _history[ind.value()].url) {
+        _history[ind.value()].url = entry.url;
+    }
+    emit dataChanged(index(ind.value()), index(ind.value()), {Qt::DisplayRole});
+}
 void HistoryModel::removeEntry(int64_t id)
 {
     auto ind = _getIndexById(id);

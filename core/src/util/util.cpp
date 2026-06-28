@@ -6,7 +6,7 @@ std::string trimSpaces(std::string str) {
     if (left == std::string::npos) {
         return "";
     }
-    auto right = str.find_last_not_of(" ");
+    auto right = str.find_last_not_of(" \t");
     if (right == std::string::npos) {
         return "";
     }

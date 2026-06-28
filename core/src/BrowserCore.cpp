@@ -68,13 +68,21 @@ BrowserCore::BrowserCore()
 
         // history
 
-        // запись в историю добавляется при навигации на новую страницу
+        // обработка событий с вкладками для истории
         _subs.push_back(std::make_unique<Subscription<NavigationRequestedArgs>>(
             this->navigationRequested.subscribe(
                 [this](NavigationRequestedArgs args) {
                     _historyService->onNavigation(args);
                 })));
+        _subs.push_back(std::make_unique<Subscription<TabTitleChangedArgs>>(
+            _tabManager->titleChanged.subscribe(
+                [this](TabTitleChangedArgs args) { _historyService->onTabTitleChanged(args.id, args.newTitle); })));
 
+        _subs.push_back(std::make_unique<Subscription<TabId>>(
+            _tabManager->tabClosed.subscribe(
+                [this](TabId id) { _historyService->onTabClosed(id); })));
+
+        // события из history service
         _subs.push_back(std::make_unique<Subscription<std::vector<HistoryEntry>>>(
             _historyService->historyLoaded.subscribe(
                 [this](std::vector<HistoryEntry> history) {
@@ -86,6 +94,12 @@ BrowserCore::BrowserCore()
             _historyService->entryAdded.subscribe([this](HistoryEntry entry) {
                 std::cerr << "\n browser core history entry added\n";
                 historyEntryAdded.invoke(entry);
+            })));
+
+        _subs.push_back(std::make_unique<Subscription<HistoryEntry>>(
+            _historyService->entryUpdated.subscribe([this](HistoryEntry entry) {
+                std::cerr << "\n browser core history entry updated\n";
+                historyEntryUpdated.invoke(entry);
             })));
 
         _subs.push_back(std::make_unique<Subscription<int64_t>>(

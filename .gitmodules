@@ -1,9 +1,7 @@
 [submodule "third_party/qwindowkit"]
 	path = third_party/qwindowkit
 	url = https://github.com/stdware/qwindowkit
-[submodule "ada"]
-	path = ada
-	url = https://github.com/ada-url/ada
+    
 [submodule "third_party/ada"]
 	path = third_party/ada
 	url = https://github.com/ada-url/ada

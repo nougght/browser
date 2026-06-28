@@ -102,6 +102,14 @@ void CoreAdapter::_setupEvents() {
                 },
                 Qt::QueuedConnection);
         })));
+
+    _subscriptions.push_back(std::make_unique<Subscription<HistoryEntry>>(
+        _core->historyEntryUpdated.subscribe([this](HistoryEntry entry) {
+            QMetaObject::invokeMethod(
+                this, [this, entry]() { emit this->historyEntryUpdated(entry); },
+                Qt::QueuedConnection);
+        })));
+        
     _subscriptions.push_back(std::make_unique<Subscription<int64_t>>(
         _core->historyEntryDeleted.subscribe([this](int64_t id) {
             QMetaObject::invokeMethod(

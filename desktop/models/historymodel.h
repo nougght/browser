@@ -17,6 +17,7 @@ public:
     QVariant data(const QModelIndex &index, int role = Qt::DisplayRole) const override;
     void addEntry(const HistoryEntry &entry);
     void addEntries(std::vector<HistoryEntry> &entries);
+    void updateEntry(const HistoryEntry &entry);
     void removeEntry(int64_t id);
     void removeAll();
     std::optional<HistoryEntry> getEntryByIndex(int index);

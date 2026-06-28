@@ -49,6 +49,7 @@ signals:
     // history
     void historyLoaded(std::vector<HistoryEntry> history);
     void historyEntryAdded(HistoryEntry entry);
+    void historyEntryUpdated(HistoryEntry entry);
     void historyEntryDeleted(int64_t id);
     void historyCleared();
 
