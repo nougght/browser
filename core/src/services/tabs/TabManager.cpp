@@ -9,6 +9,7 @@
 
 TabManager::TabManager() {
     setSearchEngine(SearchEngine::Google);
+    searchEngineLoaded.invoke(SearchEngine::Google);
 }
 
 // url of new tab with search engine base url
@@ -18,17 +19,10 @@ Url TabManager::_newTabUrl(){
 
 
 void TabManager::setSearchEngine(SearchEngine engine) {
-    switch (engine) {
-        case SearchEngine::Google:
-            _searchSettings = {SearchEngine::Google, GoogleBaseUrl, GoogleSearchPath, GoogleSearchQueryParam};
-            break;
-        case SearchEngine::Yandex:
-            _searchSettings = {SearchEngine::Yandex, YandexBaseUrl, YandexSearchPath, YandexSearchQueryParam};
-            break;
-        case SearchEngine::DuckDuckGo:
-            _searchSettings = {SearchEngine::DuckDuckGo, DuckDuckGoBaseUrl, DuckDuckGoSearchPath, DuckDuckGoSearchQueryParam};
-            break;
-    }
+    _searchSettings.engine = engine;
+    _searchSettings.baseUrl = searchEngineToBaseUrl(engine);
+    _searchSettings.searchPath = searchEngineToSearchPath(engine);
+    _searchSettings.searchQueryParam = searchEngineToSearchQueryParam(engine);
 }
 
 // TODO: session restore

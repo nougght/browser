@@ -37,6 +37,7 @@ public:
 signals:
     // tabs
     void tabsLoaded(std::vector<TabInfo> tabs);
+    void searchEngineLoaded(SearchEngine engine);
     void tabCreated(TabInfo tab);
     void tabClosed(TabId id);
     void lastTabClosed();
@@ -67,7 +68,8 @@ public slots:
     void changeActiveTab(TabId id);
     void moveTab(TabId id, int newIndex);
     void goForward(TabId id);
-    void goBack(TabId id);
+    void goBack(TabId id);\
+    void setSearchEngine(SearchEngine engine);
     void handleSearchQuery(TabId id, std::string query);
     void openInternalPage(InternalPageType type, bool isNewTab);
     

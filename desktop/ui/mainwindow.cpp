@@ -113,7 +113,7 @@ void MainWindow::setupUI(QAbstractListModel *tabsModel,
     _reloadButton->setObjectName("reloadButton");
     _reloadButton->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
 
-    _search = new SearchBar();
+    _search = new SearchBar(SearchEngine::Google);
 
     _menuButton = new QPushButton(QIcon(":/assets/grid.svg"), "");
     _menuButton->setObjectName("menuButton");
@@ -162,6 +162,8 @@ void MainWindow::setupEvents() {
     // отправляем сигналы при различных действиях пользователя
     connect(_search, &SearchBar::searchFinished, this,
             [this](QString query) { emit searchClicked(query); });
+
+    connect(_search, &SearchBar::searchEngineChanged, this, &MainWindow::onSearchEngineChanged);
 
     connect(_search, &SearchBar::bookmarkToggled, this,
             [this]() { emit bookmarkToggled(); });
@@ -455,6 +457,11 @@ void MainWindow::switchToTab(TabInfo tabInfo, bool isBookmarked) {
     }
 }
 
+void MainWindow::setSearchEngine(SearchEngine engine) {
+    _search->setSearchEngine(engine);
+}
+
+
 void MainWindow::setLoadingBarVisible(bool isVisible) {
     _prgsBarPlaceholder->setVisible(!isVisible);
     _loadingBar->setVisible(isVisible);
@@ -472,6 +479,9 @@ void MainWindow::setForwardButtonEnabled(bool enabled) {
     _forwardButton->setEnabled(enabled);
 }
 
+void MainWindow::onSearchEngineChanged(SearchEngine engine) {
+    emit searchEngineChanged(engine);
+}
 
 void MainWindow::menuClicked() {
     qDebug() << "menu clicked\n";

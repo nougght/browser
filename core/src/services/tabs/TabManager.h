@@ -64,6 +64,8 @@ public:
 
     Event<std::vector<TabInfo>> tabsLoaded;
 
+    Event<SearchEngine> searchEngineLoaded;
+    
     // создана новая вкладка
     Event<TabInfo> tabCreated;
 

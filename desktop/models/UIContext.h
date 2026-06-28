@@ -4,6 +4,7 @@
 #include <QObject>
 
 #include "bookmarkmodel.h"
+#include "core/types.h"
 #include "historymodel.h"
 #include "tabsmodel.h"
 
@@ -23,10 +24,14 @@ public:
         return _tabsModel->getTabInfo(_tabsModel->getActiveTabId()).url.toStdString();
     }
 
+    SearchEngine searchEngine(){return _searchEngine;}
+    void setSearchEngine(SearchEngine engine){_searchEngine = engine;}
+
 private:
     TabsModel *_tabsModel;
     BookmarkModel *_bookmarkModel;
     HistoryModel *_historyModel;
+    SearchEngine _searchEngine;
 };
 
 #endif // UICONTEXT_H

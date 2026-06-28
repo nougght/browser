@@ -10,6 +10,7 @@ void TabsController::_setupEvents()
 {
 
     connect(_coreAdapter, &CoreAdapter::tabsLoaded, this, &TabsController::onTabsLoaded);
+    connect(_coreAdapter, &CoreAdapter::searchEngineLoaded, this, &TabsController::onSearchEngineLoaded);
     connect(_coreAdapter, &CoreAdapter::tabCreated, this, &TabsController::onTabCreated);
     connect(_coreAdapter, &CoreAdapter::tabClosed, this, &TabsController::onTabClosed);
     connect(_coreAdapter, &CoreAdapter::lastTabClosed, this, &TabsController::lastTabClosed);
@@ -73,6 +74,19 @@ void TabsController::onSearchRequested(QString searchQuery)
     _coreAdapter->handleSearchQuery(_ctx->activeTabId(), searchQuery.toStdString());
 }
 
+void TabsController::onSearchEngineChanged(SearchEngine engine)
+{
+    qDebug() << "\nSearch engine changed: " << static_cast<int>(engine);
+    _ctx->setSearchEngine(engine);
+    _coreAdapter->setSearchEngine(engine);
+    if (_ctx->activeTabId().isValid()) {
+        auto tab = _ctx->getTabsModel()->getTabInfo(_ctx->activeTabId());
+        if (auto type = tab.url.getInternalPageType(); type.has_value() && type.value() == InternalPageType::NewTab) {
+            _coreAdapter->openInternalPage(InternalPageType::NewTab, false);
+        }
+    }
+}
+
 // engine navigation requested
 void TabsController::onNavigationRequested(NavigationType type, TabId id, Url url)
 {
@@ -128,6 +142,13 @@ void TabsController::onTabsLoaded(std::vector<TabInfo> tabs)
     auto id = tabs.back().id;
     _ctx->getTabsModel()->setInitialTabs(tabs);
     emit tabsLoaded(std::move(tabs));
+}
+
+void TabsController::onSearchEngineLoaded(SearchEngine engine)
+{
+    qDebug() << "\nSearch engine loaded: " << static_cast<int>(engine);
+    _ctx->setSearchEngine(engine);
+    emit searchEngineLoaded(engine);
 }
 
 void TabsController::onTabCreated(TabInfo tabInfo)

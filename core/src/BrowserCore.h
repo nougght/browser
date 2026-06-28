@@ -74,6 +74,7 @@ public:
     void moveTab(TabId id, int newIndex) override;
     void goForward(TabId id) override;
     void goBack(TabId id) override;
+    void setSearchEngine(SearchEngine engine) override;
     void handleSearchQuery(TabId id, std::string query) override;
     void handleNavigationRequested(NavigationType type, TabId id, Url url) override;
     void openInternalPage(InternalPageType type, bool isNewTab = true) override;

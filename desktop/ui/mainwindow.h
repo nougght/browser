@@ -47,6 +47,7 @@ signals:
 
     
     void searchClicked(QString searchQuery);
+    void searchEngineChanged(SearchEngine engine);
 
     void navigationRequested(NavigationType type, TabId id, Url url);
     void newTabRequested(Url url, bool isBackground);
@@ -67,6 +68,7 @@ public slots:
     void addTab(TabInfo tabInfo);
     void closeTab(TabId id);
     void switchToTab(TabInfo tabInfo, bool isBookmarked);
+    void setSearchEngine(SearchEngine engine);
 
     void setLoadingBarVisible(bool isVisible);
     void setLoadingProgress(int progress);
@@ -92,7 +94,7 @@ private:
                  QAbstractListModel *bookmarksModel);
     void setupEvents();
     void setupTabViewEvents(TabId tabId, QWebEngineView *tabView);
-
+    void onSearchEngineChanged(SearchEngine engine);
     void menuClicked();
 
 

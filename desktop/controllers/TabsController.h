@@ -14,6 +14,7 @@ public:
     TabsController(CoreAdapter *coreAdapter, UIContext *ctx);
     // slots for core signals
     void onTabsLoaded(std::vector<TabInfo>);
+    void onSearchEngineLoaded(SearchEngine engine);
     void onTabCreated(TabInfo tabInfo);
     void onTabClosed(TabId id);
     void onLastTabClosed();
@@ -35,6 +36,7 @@ public:
 
     // slots for ui signals
     void onSearchRequested(QString searchQuery);
+    void onSearchEngineChanged(SearchEngine engine);
 
     void onNavigationRequested(NavigationType type, TabId id, Url url);
     void onNewTabRequested(Url url, bool isBackground);
@@ -66,6 +68,7 @@ signals:
     void forwardNavigationAvailabilityChanged(bool canGoForward);
 
     void tabsLoaded(std::vector<TabInfo> tabs);
+    void searchEngineLoaded(SearchEngine engine);
     void tabCreated(TabInfo tabInfo);
     void tabClosed(TabId id);
     void lastTabClosed();

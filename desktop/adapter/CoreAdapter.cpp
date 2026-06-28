@@ -11,6 +11,13 @@ void CoreAdapter::_setupEvents() {
             });
         })));
 
+    _subscriptions.push_back(std::make_unique<Subscription<SearchEngine>>(
+        _core->searchEngineLoaded.subscribe([this](SearchEngine engine) {
+            QMetaObject::invokeMethod(this, [this, engine]() {
+                emit this->searchEngineLoaded(engine);
+            }, Qt::QueuedConnection);
+        })));
+
     _subscriptions.push_back(std::make_unique<Subscription<TabInfo>>(
         _core->tabCreated.subscribe([this](TabInfo tabInfo) {
             QMetaObject::invokeMethod(
@@ -188,6 +195,9 @@ void CoreAdapter::goForward(TabId id) { _core->goForward(id); }
 
 void CoreAdapter::goBack(TabId id) { _core->goBack(id); }
 
+void CoreAdapter::setSearchEngine(SearchEngine engine) {
+    _core->setSearchEngine(engine);
+}
 void CoreAdapter::handleSearchQuery(TabId id, std::string query) {
     // _core->visitUrl(id, convert(url));
     _core->handleSearchQuery(id, query);

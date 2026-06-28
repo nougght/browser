@@ -22,6 +22,7 @@ public:
     virtual void moveTab(TabId id, int newIndex) = 0;
     virtual void goForward(TabId id) = 0;
     virtual void goBack(TabId id) = 0;
+    virtual void setSearchEngine(SearchEngine engine) = 0;
     virtual void handleSearchQuery(TabId id, std::string query) = 0;
     virtual void handleNavigationRequested(NavigationType type, TabId id, Url url) = 0;
     virtual void openInternalPage(InternalPageType type, bool isNewTab = true) = 0;
@@ -50,6 +51,7 @@ public:
 
     // список вкладок
     Event<std::vector<TabInfo>> tabsLoaded;
+    Event<SearchEngine> searchEngineLoaded;
 
     // создана новая вкладка
     Event<TabInfo> tabCreated;

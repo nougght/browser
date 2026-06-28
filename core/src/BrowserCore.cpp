@@ -25,6 +25,10 @@ BrowserCore::BrowserCore()
             _tabManager->tabCreated.subscribe(
                 [this](TabInfo tabInfo) { this->tabCreated.invoke(tabInfo); })));
 
+        _subs.push_back(std::make_unique<Subscription<SearchEngine>>(
+            _tabManager->searchEngineLoaded.subscribe(
+                [this](SearchEngine engine) { searchEngineLoaded.invoke(engine); })));
+
         _subs.push_back(std::make_unique<Subscription<std::vector<TabInfo>>>(
             _tabManager->tabsLoaded.subscribe(
                 [this](std::vector<TabInfo> tabs) { tabsLoaded.invoke(tabs); })));
@@ -257,6 +261,12 @@ void BrowserCore::closeTab(TabId id) {
             return;
         }
         _tabManager->closeTab(id);
+    });
+}
+
+void BrowserCore::setSearchEngine(SearchEngine engine) {
+    post([this, engine] {
+        _tabManager->setSearchEngine(engine);
     });
 }
 

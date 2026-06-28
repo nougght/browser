@@ -1,29 +1,9 @@
 #ifndef URL_H
 #define URL_H
 
-#include <fstream>
 #include <ostream>
 #include <string>
 #include <optional>
-
-
-// base urls
-
-const std::string GoogleBaseUrl = "https://www.google.com";
-const std::string YandexBaseUrl = "https://yandex.com";
-const std::string DuckDuckGoBaseUrl = "https://duckduckgo.com";
-
-// search paths
-
-const std::string GoogleSearchPath = "/search";
-const std::string YandexSearchPath = "/search";
-const std::string DuckDuckGoSearchPath = "";
-
-// search query params
-
-const std::string GoogleSearchQueryParam = "q";
-const std::string YandexSearchQueryParam = "text";
-const std::string DuckDuckGoSearchQueryParam = "q";
 
 
 // internal page urls

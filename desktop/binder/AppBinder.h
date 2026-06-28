@@ -28,6 +28,8 @@ public:
 
         QObject::connect(tabsController, &TabsController::tabsLoaded, mainWindow,
                          &MainWindow::addTabs);
+        QObject::connect(tabsController, &TabsController::searchEngineLoaded, mainWindow,
+                         &MainWindow::setSearchEngine);
         QObject::connect(tabsController, &TabsController::tabCreated, mainWindow,
                          &MainWindow::addTab);
         QObject::connect(tabsController, &TabsController::tabClosed, mainWindow,
@@ -82,6 +84,8 @@ public:
                          &TabsController::onForwardClicked);
         QObject::connect(mainWindow, &MainWindow::searchClicked, tabsController,
                          &TabsController::onSearchRequested);
+        QObject::connect(mainWindow, &MainWindow::searchEngineChanged, tabsController,
+                         &TabsController::onSearchEngineChanged);
 
         QObject::connect(mainWindow, &MainWindow::navigationRequested,
                          tabsController, &TabsController::onNavigationRequested);
