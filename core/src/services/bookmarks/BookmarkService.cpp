@@ -18,17 +18,18 @@ void BookmarkService::_updateIndexDelete(size_t ind) {
     auto b = _bookmarks[ind];
     _idIndex.erase(b.id);
     _urlIndex.erase(b.url);
-    for (auto i = ind; i < _bookmarks.size(); ++i){
-        _idIndex[_bookmarks[i].id] = i;
-        _urlIndex[_bookmarks[i].url] = i;
+    for (auto i = ind + 1; i < _bookmarks.size(); ++i){
+        _idIndex[_bookmarks[i].id] = i - 1;
+        _urlIndex[_bookmarks[i].url] = i - 1;
     }
 }
 
 void BookmarkService::loadBookmarks() {
     _repo->getBookmarks([this](std::vector<Bookmark> bookmarks, RepositoryError error) {
         if (error.code == RepositoryErrorCode::Success) {
+        auto oldSize = _bookmarks.size();
         _bookmarks.insert(_bookmarks.end(), bookmarks.begin(), bookmarks.end());
-        for (int i = 0; i < bookmarks.size(); ++i) {
+        for (size_t i = oldSize; i < _bookmarks.size(); ++i) {
             _updateIndexAdd(i);
         }
         std::printf("\nbookmarks service loaded bookmarks: size = %d\n", _bookmarks.size());
@@ -55,7 +56,7 @@ void BookmarkService::addBookmark(Bookmark bookmark) {
     _repo->addBookmark(bookmark, [this](std::optional<Bookmark> bookmark, RepositoryError error) {
         if (error.code == RepositoryErrorCode::Success) {
             if (bookmark) {
-            _bookmarks.insert(_bookmarks.end(), bookmark.value());
+                _bookmarks.insert(_bookmarks.end(), bookmark.value());
                 _updateIndexAdd(_bookmarks.size() - 1);
                 std::printf("bookmarks service added bookmark: %d\n", _bookmarks.size() - 1);
                 bookmarkAdded.invoke(bookmark.value());
@@ -81,8 +82,8 @@ void BookmarkService::deleteBookmark(int64_t id) {
             auto it = _idIndex.find(id);
             if (it != _idIndex.end()) {
                 auto ind = it->second;
-                _bookmarks.erase(_bookmarks.begin() + ind);
                 _updateIndexDelete(ind);
+                _bookmarks.erase(_bookmarks.begin() + ind);
             } else {
                 std::printf("BS delete bookmark id not found in index\n");
             }
