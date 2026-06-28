@@ -16,17 +16,29 @@ private:
     std::vector<TabId> _tabsOrder;
     TabIdGenerator _idGenerator;
     TabId _activeTabId;
-    //
-    Url _initialTabUrl = Url("https://google.com");
+
+    SearchSettings _searchSettings;
 
     std::pair<TabId, std::unique_ptr<Tab>> _findTab(TabId id);
+
+    Url _newTabUrl();
+
+    Url _buildSearchUrl(std::string query);
+    std::optional<Url> _resolveQuery(std::string query);
+
+    
+    void _visitUrl(TabId id, Url url);
 
 public:
     TabManager();
     void loadTabs();
 
-    TabId createTab();
-    TabId createTab(Url url);
+    void setSearchEngine(SearchEngine engine);
+    void handleSearchQuery(TabId id, std::string query);
+    void openInternalPage(InternalPageType type, bool isNewTab = true);
+
+    TabId createTab(Url url, bool isBackground);
+    TabId createTab(bool isBackground);
     void closeTab(TabId id);
     TabId getActiveTabId();
     void changeActiveTab(TabId id);
@@ -41,9 +53,10 @@ public:
     void goBack(TabId id);
     void goForward(TabId id);
 
-    void visitUrl(TabId id, Url url);
-    void changeTabUrl(TabId id, Url url);
-    void changeTabTitle(TabId id, std::string title);
+    void onNavigationRequested(NavigationType type, TabId id, Url url);
+    void onEngineUrlChanged(TabId id, Url url);
+    void onEngineTitleChanged(TabId id, std::string title);
+    
     void changeTabLoadingProgress(TabId id, int progress);
     void setTabLoadingStatus(TabId id, bool isLoading);
     void reloadTab(TabId id);
@@ -51,11 +64,14 @@ public:
 
     Event<std::vector<TabInfo>> tabsLoaded;
 
+    Event<SearchEngine> searchEngineLoaded;
+    
     // создана новая вкладка
     Event<TabInfo> tabCreated;
 
     // переходы в рамках одной вкладки
-    Event<NavigationRequestedArgs> navigationRequested;
+    Event<NavigationCommandArgs> navigationCommand;
+    Event<NavigationCompletedArgs> navigationCompleted;
 
     Event<TabTitleChangedArgs> titleChanged;
 

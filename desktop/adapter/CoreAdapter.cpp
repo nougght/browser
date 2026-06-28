@@ -11,6 +11,13 @@ void CoreAdapter::_setupEvents() {
             });
         })));
 
+    _subscriptions.push_back(std::make_unique<Subscription<SearchEngine>>(
+        _core->searchEngineLoaded.subscribe([this](SearchEngine engine) {
+            QMetaObject::invokeMethod(this, [this, engine]() {
+                emit this->searchEngineLoaded(engine);
+            }, Qt::QueuedConnection);
+        })));
+
     _subscriptions.push_back(std::make_unique<Subscription<TabInfo>>(
         _core->tabCreated.subscribe([this](TabInfo tabInfo) {
             QMetaObject::invokeMethod(
@@ -40,14 +47,21 @@ void CoreAdapter::_setupEvents() {
         })));
 
     _subscriptions.push_back(
-        std::make_unique<Subscription<NavigationRequestedArgs>>(
-            _core->navigationRequested.subscribe(
-                [this](NavigationRequestedArgs args) {
+        std::make_unique<Subscription<NavigationCommandArgs>>(
+            _core->navigationCommand.subscribe(
+                [this](NavigationCommandArgs args) {
                 QMetaObject::invokeMethod(
                         this,
-                        [this, args]() { emit this->navigationRequested(args); },
+                        [this, args]() { emit this->navigationCommand(args); },
                         Qt::QueuedConnection);
                 })));
+
+    _subscriptions.push_back(std::make_unique<Subscription<NavigationCompletedArgs>>(
+        _core->navigationCompleted.subscribe([this](NavigationCompletedArgs args) {
+            QMetaObject::invokeMethod(
+                this, [this, args]() { emit this->navigationCompleted(args); },
+                Qt::QueuedConnection);
+        })));
 
     _subscriptions.push_back(std::make_unique<Subscription<TabTitleChangedArgs>>(
         _core->titleChanged.subscribe([this](TabTitleChangedArgs args) {
@@ -102,6 +116,14 @@ void CoreAdapter::_setupEvents() {
                 },
                 Qt::QueuedConnection);
         })));
+
+    _subscriptions.push_back(std::make_unique<Subscription<HistoryEntry>>(
+        _core->historyEntryUpdated.subscribe([this](HistoryEntry entry) {
+            QMetaObject::invokeMethod(
+                this, [this, entry]() { emit this->historyEntryUpdated(entry); },
+                Qt::QueuedConnection);
+        })));
+
     _subscriptions.push_back(std::make_unique<Subscription<int64_t>>(
         _core->historyEntryDeleted.subscribe([this](int64_t id) {
             QMetaObject::invokeMethod(
@@ -157,9 +179,9 @@ void CoreAdapter::deleteBookmark(int64_t id) { _core->deleteBookmark(id); }
 
 
 void CoreAdapter::loadTabs() { _core->loadTabs(); }
-void CoreAdapter::createTab(QUrl url) { _core->createTab(convert(url)); }
+void CoreAdapter::createTab(Url url, bool isBackground) { _core->createTab(url, isBackground); }
 
-void CoreAdapter::createTab() { _core->createTab(); }
+void CoreAdapter::createTab(bool isBackground) { _core->createTab(isBackground); }
 
 void CoreAdapter::closeTab(TabId id) { _core->closeTab(id); }
 
@@ -173,16 +195,28 @@ void CoreAdapter::goForward(TabId id) { _core->goForward(id); }
 
 void CoreAdapter::goBack(TabId id) { _core->goBack(id); }
 
-void CoreAdapter::visitUrl(TabId id, QUrl url) {
-    _core->visitUrl(id, convert(url));
+void CoreAdapter::setSearchEngine(SearchEngine engine) {
+    _core->setSearchEngine(engine);
+}
+void CoreAdapter::handleSearchQuery(TabId id, std::string query) {
+    // _core->visitUrl(id, convert(url));
+    _core->handleSearchQuery(id, query);
+}
+
+void CoreAdapter::openInternalPage(InternalPageType type, bool isNewTab) {
+    _core->openInternalPage(type, isNewTab);
+}
+
+void CoreAdapter::handleNavigationRequested(NavigationType type, TabId id, Url url) {
+    _core->handleNavigationRequested(type, id, url);
 }
 
 void CoreAdapter::changeTabUrl(TabId id, QUrl url) {
-    _core->changeTabUrl(id, convert(url));
+    _core->onEngineUrlChanged(id, convert(url));
 }
 
 void CoreAdapter::changeTabTitle(TabId id, QString title) {
-    _core->changeTabTitle(id, title.toStdString());
+    _core->onEngineTitleChanged(id, title.toStdString());
 }
 
 void CoreAdapter::changeTabLoadingProgress(TabId id, int progress) {

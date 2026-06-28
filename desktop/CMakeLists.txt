@@ -49,6 +49,9 @@ set(PROJECT_SOURCES
         models/UIContext.h models/UIContext.cpp
         ui/tabdelegate.h ui/tabdelegate.cpp
         ui/historydelegate.h ui/historydelegate.cpp
+        ui/bookmarkdelegate.h ui/bookmarkdelegate.cpp
+        ui/webenginepage.cpp ui/webenginepage.h
+
         ${TS_FILES}
 )
 
@@ -57,7 +60,6 @@ if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
 qt_add_executable(desktop
         MANUAL_FINALIZATION
         ${PROJECT_SOURCES}
-        ui/bookmarkdelegate.h ui/bookmarkdelegate.cpp
 
 
 
@@ -99,6 +101,7 @@ target_link_libraries(desktop PRIVATE
     browser_core
     )
 
+# копирование dll рядом с exe
 if(WIN32 AND TARGET QWKWidgets)
     add_custom_command(TARGET desktop POST_BUILD
         COMMAND ${CMAKE_COMMAND} -E copy_if_different

@@ -15,16 +15,23 @@ class IBrowserCore : public ICoreDispatcher {
 public:
     // tabs
     virtual void loadTabs() = 0;
-    virtual void createTab(Url url) = 0;
-    virtual void createTab() = 0;
+    virtual void createTab(Url url, bool isBackground) = 0;
+    virtual void createTab(bool isBackground) = 0;
     virtual void closeTab(TabId id) = 0;
     virtual void changeActiveTab(TabId id) = 0;
     virtual void moveTab(TabId id, int newIndex) = 0;
     virtual void goForward(TabId id) = 0;
     virtual void goBack(TabId id) = 0;
-    virtual void visitUrl(TabId id, Url url) = 0;
-    virtual void changeTabUrl(TabId id, Url url) = 0;
-    virtual void changeTabTitle(TabId id, std::string title) = 0;
+    virtual void setSearchEngine(SearchEngine engine) = 0;
+    virtual void handleSearchQuery(TabId id, std::string query) = 0;
+    virtual void handleNavigationRequested(NavigationType type, TabId id, Url url) = 0;
+    virtual void openInternalPage(InternalPageType type, bool isNewTab = true) = 0;
+    // virtual void visitUrl(TabId id, Url url) = 0;
+
+    virtual void onEngineUrlChanged(TabId id, Url url) = 0;
+    virtual void onEngineTitleChanged(TabId id, std::string title) = 0;
+    
+
     virtual void changeTabLoadingProgress(TabId id, int progress) = 0;
     virtual void setTabLoadingStatus(TabId id, bool isLoading) = 0;
     virtual void reloadTab(TabId id) = 0;
@@ -44,12 +51,14 @@ public:
 
     // список вкладок
     Event<std::vector<TabInfo>> tabsLoaded;
+    Event<SearchEngine> searchEngineLoaded;
 
     // создана новая вкладка
     Event<TabInfo> tabCreated;
 
     // переходы в рамках одной вкладки
-    Event<NavigationRequestedArgs> navigationRequested;
+    Event<NavigationCommandArgs> navigationCommand;
+    Event<NavigationCompletedArgs> navigationCompleted;
 
     Event<TabTitleChangedArgs> titleChanged;
 
@@ -79,6 +88,7 @@ public:
 
     Event<std::vector<HistoryEntry>> historyLoaded;
     Event<HistoryEntry> historyEntryAdded;
+    Event<HistoryEntry> historyEntryUpdated;
     Event<int64_t> historyEntryDeleted;
     Event<void> historyCleared;
 

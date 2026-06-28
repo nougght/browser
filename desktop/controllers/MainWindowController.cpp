@@ -16,11 +16,11 @@ void MainWindowController::_setupEvents()
 
 void MainWindowController::onHistoryClicked()
 {
-    emit historyPageRequested();
+    _coreAdapter->openInternalPage(InternalPageType::History, true);
 }
 
 
 void MainWindowController::onBookmarksClicked()
 {
-    emit bookmarksPageRequested();
+    _coreAdapter->openInternalPage(InternalPageType::Bookmarks, true);
 }

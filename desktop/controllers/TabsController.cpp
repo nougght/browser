@@ -10,6 +10,7 @@ void TabsController::_setupEvents()
 {
 
     connect(_coreAdapter, &CoreAdapter::tabsLoaded, this, &TabsController::onTabsLoaded);
+    connect(_coreAdapter, &CoreAdapter::searchEngineLoaded, this, &TabsController::onSearchEngineLoaded);
     connect(_coreAdapter, &CoreAdapter::tabCreated, this, &TabsController::onTabCreated);
     connect(_coreAdapter, &CoreAdapter::tabClosed, this, &TabsController::onTabClosed);
     connect(_coreAdapter, &CoreAdapter::lastTabClosed, this, &TabsController::lastTabClosed);
@@ -17,7 +18,8 @@ void TabsController::_setupEvents()
     connect(_coreAdapter, &CoreAdapter::loadingStatusChanged, this, &TabsController::onLoadingStatusChanged);
     connect(_coreAdapter, &CoreAdapter::loadingProgressChanged, this, &TabsController::onLoadingProgressChanged);
     connect(_coreAdapter, &CoreAdapter::titleChanged, this, &TabsController::onTabTitleChanged);
-    connect(_coreAdapter, &CoreAdapter::navigationRequested, this, &TabsController::onNavigationRequested);
+    connect(_coreAdapter, &CoreAdapter::navigationCommand, this, &TabsController::onNavigationCommand);
+    connect(_coreAdapter, &CoreAdapter::navigationCompleted, this, &TabsController::onNavigationCompleted);
 
     connect(_ctx->getTabsModel(), &TabsModel::dataChanged, this, &TabsController::onTabsModelDataChanged);
     // connect(_coreAdapter, &CoreAdapter::tabsLoaded, this, &TabsController::onTabsLoaded);
@@ -29,7 +31,7 @@ void TabsController::_setupEvents()
 void TabsController::onNewTabClicked()
 {
     qDebug() << "\nNew tab clicked";
-    _coreAdapter->createTab();
+    _coreAdapter->openInternalPage(InternalPageType::NewTab, true);
 }
 
 void TabsController::onTabClicked(int index)
@@ -69,9 +71,34 @@ void TabsController::onSearchRequested(QString searchQuery)
     // goToWebsite(_search->text());
     qDebug() << "\nSearch requested: " << searchQuery;
     // qDebug() << "\nSIZE = " << _core->urlVisited.handlersSize();
-    _coreAdapter->visitUrl(_ctx->activeTabId(), searchQuery);
+    _coreAdapter->handleSearchQuery(_ctx->activeTabId(), searchQuery.toStdString());
 }
 
+void TabsController::onSearchEngineChanged(SearchEngine engine)
+{
+    qDebug() << "\nSearch engine changed: " << static_cast<int>(engine);
+    _ctx->setSearchEngine(engine);
+    _coreAdapter->setSearchEngine(engine);
+    if (_ctx->activeTabId().isValid()) {
+        auto tab = _ctx->getTabsModel()->getTabInfo(_ctx->activeTabId());
+        if (auto type = tab.url.getInternalPageType(); type.has_value() && type.value() == InternalPageType::NewTab) {
+            _coreAdapter->openInternalPage(InternalPageType::NewTab, false);
+        }
+    }
+}
+
+// engine navigation requested
+void TabsController::onNavigationRequested(NavigationType type, TabId id, Url url)
+{
+    qDebug() << "\nNavigation requested: " << static_cast<int>(type) << " for tab " << id.value << " with url " << QString::fromStdString(url.toStdString());
+    _coreAdapter->handleNavigationRequested(type, id, url);
+}
+
+void TabsController::onNewTabRequested(Url url, bool isBackground)
+{
+    qDebug() << "\nNew tab requested: " << QString::fromStdString(url.toStdString()) << " is background: " << isBackground;
+    _coreAdapter->createTab(url, isBackground);
+}
 // redirect
 void TabsController::onEngineUrlChanged(TabId id, QUrl newUrl)
 {
@@ -115,6 +142,13 @@ void TabsController::onTabsLoaded(std::vector<TabInfo> tabs)
     auto id = tabs.back().id;
     _ctx->getTabsModel()->setInitialTabs(tabs);
     emit tabsLoaded(std::move(tabs));
+}
+
+void TabsController::onSearchEngineLoaded(SearchEngine engine)
+{
+    qDebug() << "\nSearch engine loaded: " << static_cast<int>(engine);
+    _ctx->setSearchEngine(engine);
+    emit searchEngineLoaded(engine);
 }
 
 void TabsController::onTabCreated(TabInfo tabInfo)
@@ -165,25 +199,46 @@ void TabsController::onLoadingProgressChanged(TabLoadingProgressChangedArgs args
     }
 }
 
-// sending update signals to mainwindow
-void TabsController::onNavigationRequested(NavigationRequestedArgs args)
+void TabsController::onNavigationCommand(NavigationCommandArgs args)
 {
-    qDebug() << "\nNavigation requested for tab " << args.tabInfo.id.value << " with url " << QString::fromStdString(args.tabInfo.url.toStdString()) << " and navigation type " << static_cast<int>(args.type);
+    qDebug() << "\nNavigation command: " << static_cast<int>(args.type) << " for tab " << args.tabId.value;
+    switch (args.type)
+    {
+    case NavigationType::NewPage:
+        emit urlVisitCommand(args.tabId, args.url);
+        break;
+    case NavigationType::Back:
+        emit backNavigationCommand(args.tabId);
+        break;
+    case NavigationType::Forward:
+        emit forwardNavigationCommand(args.tabId);
+        break;
+    case NavigationType::Reload:
+        emit reloadCommand(args.tabId);
+        break;
+    }
+}
+
+// core navigation completed
+void TabsController::onNavigationCompleted(NavigationCompletedArgs args)
+{
+    qDebug() << "\nNavigation completed for tab " << args.tabInfo.id.value << " with url " << QString::fromStdString(args.tabInfo.url.toStdString()) << " and navigation type " << static_cast<int>(args.type);
     bool isBookmarked = _ctx->getBookmarkModel()->isBookmarked(args.tabInfo.url.toStdString());
     switch (args.type)
     {
     case NavigationType::NewPage:
+        _ctx->getTabsModel()->updateTabTitle(args.tabInfo.id, args.tabInfo.title);
         _ctx->getTabsModel()->updateTabUrl(args.tabInfo.id, args.tabInfo.url);
         _ctx->getTabsModel()->updateTabNavigation(args.tabInfo.id, args.tabInfo.canGoBack, args.tabInfo.canGoForward);
-        emit urlVisitRequested(args.tabInfo, isBookmarked);
         break;
     case NavigationType::Back:
         _ctx->getTabsModel()->updateTabNavigation(args.tabInfo.id, args.tabInfo.canGoBack, args.tabInfo.canGoForward);
-        emit backNavigationRequested(args.tabInfo, isBookmarked);
         break;
     case NavigationType::Forward:
         _ctx->getTabsModel()->updateTabNavigation(args.tabInfo.id, args.tabInfo.canGoBack, args.tabInfo.canGoForward);
-        emit forwardNavigationRequested(args.tabInfo, isBookmarked);
+        break;
+    case NavigationType::BackForwardCompleted:
+        _ctx->getTabsModel()->updateTabNavigation(args.tabInfo.id, args.tabInfo.canGoBack, args.tabInfo.canGoForward);
         break;
 
     case NavigationType::Redirect:
@@ -191,14 +246,15 @@ void TabsController::onNavigationRequested(NavigationRequestedArgs args)
         _ctx->getTabsModel()->updateTabNavigation(args.tabInfo.id, args.tabInfo.canGoBack, args.tabInfo.canGoForward);
         // redirected(CoreAdapter::convert(args.tabInfo.url));
         // _tabBar->updateTabNavigation(_activeTabId, args.tabInfo.canGoBack, args.tabInfo.canGoForward);
-        break;
-    case NavigationType::Reload:
-        // onUrlVisited(convert(args.tabInfo.url));
-        reloadRequested(args.tabInfo.id);
+            break;
+    default:
         break;
     }
+
+    emit navigationCompleted(args, isBookmarked);
 }
 
+// обновление ui при изменении модели вкладок
 void TabsController::onTabsModelDataChanged(const QModelIndex &topLeft,
                                             const QModelIndex &bottomRight,
                                             const QList<int> &roles)
@@ -210,7 +266,15 @@ void TabsController::onTabsModelDataChanged(const QModelIndex &topLeft,
     }
     if (roles.contains(TabsModel::Roles::UrlRole))
     {
-        emit activeTabUrlChanged(_ctx->getTabsModel()->index(topLeft.row(), 0).data(TabsModel::UrlRole).toUrl());
+        auto url = _ctx->getTabsModel()->index(topLeft.row(), 0).data(TabsModel::UrlRole).toString().toStdString();
+        auto optionalUrl = Url::parse(url);
+        if (optionalUrl.has_value()) {
+            if (auto type = optionalUrl.value().getInternalPageType(); type.has_value() && type.value() == InternalPageType::NewTab) {
+                emit activeTabUrlChanged(Url());
+            } else {
+                emit activeTabUrlChanged(optionalUrl.value());
+            }
+        }
     }
     if (roles.contains(TabsModel::Roles::IsLoadingRole))
     {

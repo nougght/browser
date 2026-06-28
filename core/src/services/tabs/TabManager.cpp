@@ -1,32 +1,57 @@
 #include "TabManager.h"
+#include "core/Url.h"
+#include "core/eventArgs.h"
 #include <algorithm>
 #include <iterator>
 
-TabManager::TabManager() {}
+#include <util/util.h>
+#include <ada.h>
 
-void TabManager::loadTabs() {
-    // createTab();
-    TabId id = _idGenerator.create();
-    auto tab = std::make_unique<Tab>(id, _initialTabUrl);
-    _tabs.emplace(id, std::move(tab));
-
-    _tabsOrder.push_back(id);
-    tabsLoaded.invoke(getTabInfos());
-    changeActiveTab(id);
+TabManager::TabManager() {
+    setSearchEngine(SearchEngine::Google);
+    searchEngineLoaded.invoke(SearchEngine::Google);
 }
 
-TabId TabManager::createTab(Url url) {
-    TabId id = _idGenerator.create();
-    auto tab = std::make_unique<Tab>(id, std::move(url));
-    _tabs.emplace(id, std::move(tab));
+// url of new tab with search engine base url
+Url TabManager::_newTabUrl(){
+    return Url::newTabUrl(_searchSettings.baseUrl);
+}
 
+
+void TabManager::setSearchEngine(SearchEngine engine) {
+    _searchSettings.engine = engine;
+    _searchSettings.baseUrl = searchEngineToBaseUrl(engine);
+    _searchSettings.searchPath = searchEngineToSearchPath(engine);
+    _searchSettings.searchQueryParam = searchEngineToSearchQueryParam(engine);
+}
+
+// TODO: session restore
+void TabManager::loadTabs() {
+    openInternalPage(InternalPageType::NewTab, true);
+}
+
+// create new tab with optional url
+TabId TabManager::createTab(Url url, bool isBackground) {
+    auto tab = std::make_unique<Tab>(_idGenerator.create());
+    TabId id = tab->getId();
+    _tabs.emplace(id, std::move(tab));
     _tabsOrder.push_back(id);
+
     tabCreated.invoke(getTab(id)->toTabInfo());
-    changeActiveTab(id);
+    
+    if (!isBackground) {
+        changeActiveTab(id);
+    }
+
+    if (!url.isEmpty() && !url.isInternal()) {
+        _visitUrl(id, url);
+    } 
     return id;
 }
 
-TabId TabManager::createTab() { return createTab(_initialTabUrl); }
+TabId TabManager::createTab(bool isBackground) {
+    return createTab(_newTabUrl(), isBackground);
+}
 
 void TabManager::closeTab(TabId id) {
     auto it = std::find(_tabsOrder.begin(), _tabsOrder.end(), id);
@@ -56,6 +81,54 @@ void TabManager::closeTab(TabId id) {
     
 }
 
+
+void TabManager::_visitUrl(TabId id, Url url) {
+    auto tab = getTab(id);
+    if (tab == nullptr) {
+        std::printf("TM visitUrl not found\n");
+        return;
+    }
+    std::printf("TM visitUrl %s\n", url.toStdString().c_str());
+    navigationCommand.invoke(NavigationCommandArgs{
+                                                       NavigationType::NewPage, id, url});
+}
+
+void TabManager::onNavigationRequested(NavigationType type, TabId id, Url url) {
+    switch (type) {
+        case NavigationType::NewPage: {
+            auto tab = getTab(id);
+            if (tab == nullptr) {
+                std::printf("TM onNavigationCommand tab not found\n");
+                return;
+            }
+            // не меняем url новой вкладки
+            if (tab->getInternalPageType().has_value()) {
+                switch (tab->getInternalPageType().value()) {
+                    case InternalPageType::NewTab:
+                        return;
+                    default:
+                        break;
+                }
+            }
+            tab->visitUrl(url);
+            break;
+        }
+        case NavigationType::Reload: {
+            break;
+        }
+        case NavigationType::Redirect: {
+            auto tab = getTab(id);
+            if (tab == nullptr) {
+                std::printf("TM onNavigationCommand tab not found\n");
+                return;
+            }
+            tab->changeUrl(url);
+        }
+    }
+
+    navigationCompleted.invoke(NavigationCompletedArgs{type, getTab(id)->toTabInfo()});
+}
+
 void TabManager::changeActiveTab(TabId id) {
     if (_tabs.find(id) != _tabs.end()) {
         _activeTabId = id;
@@ -64,34 +137,161 @@ void TabManager::changeActiveTab(TabId id) {
 }
 
 void TabManager::reloadTab(TabId id) {
-    navigationRequested.invoke(
-        NavigationRequestedArgs{NavigationType::Reload, getTab(id)->toTabInfo()});
+    navigationCommand.invoke(
+        NavigationCommandArgs{NavigationType::Reload, id, Url()});
 }
 
-void TabManager::visitUrl(TabId id, Url url) {
-    auto existing = _tabs.find(id);
-    if (existing != _tabs.end()) {
-        existing->second->visitUrl(url);
+Url TabManager::_buildSearchUrl(std::string query) {
+    auto adaUrl = ada::parse(_searchSettings.baseUrl);
+    if (!adaUrl) {
+        throw std::runtime_error("TM buildSearchUrl ada::parse failed");
     }
-}
-
-void TabManager::changeTabUrl(TabId id, Url url) {
-    auto existing = _tabs.find(id);
-    if (existing != _tabs.end()) {
-        existing->second->changeUrl(url);
+    ada::url_search_params params;
+    params.append(_searchSettings.searchQueryParam, query);
+    adaUrl->set_pathname(_searchSettings.searchPath);
+    adaUrl->set_search(params.to_string());
+    auto href = adaUrl->get_href();
+    auto optionalUrl = Url::parse(std::string(href.begin(), href.end()));
+    if (!optionalUrl.has_value()) {
+        throw std::runtime_error("TM buildSearchUrl Url::parse failed");
     }
+    return optionalUrl.value();
 }
 
-void TabManager::changeTabTitle(TabId id, std::string title) {
+std::optional<Url> TabManager::_resolveQuery(std::string query) {
+    query = trimSpaces(query);
+    if (query.empty()) {
+        return _newTabUrl();
+    }
+
+    if (query.find("br://") == 0) {
+        if (query == NewTabUrl) {
+            return _newTabUrl();
+        }
+        return Url::parse(query);
+    }
+
+    if (isLikeUrl(query)) {
+        std::printf("TM resolveQuery like url\n");
+        if (auto i = query.find("://"); i != std::string::npos) {
+            auto protocol = query.substr(0, i);
+            // if (protocol != "http" && protocol != "https" && protocol != "br") {
+            //     std::printf("TM resolveQuery invalid protocol\n");
+            //     return std::nullopt;
+            // }
+            return Url::parse(query);
+        } else {
+            query = "https://" + query;
+            return Url::parse(query);
+        }
+    } else {
+        return _buildSearchUrl(query);
+    }
+
+    return std::nullopt;
+}
+
+void TabManager::handleSearchQuery(TabId id, std::string query) {
+    auto existing = _tabs.find(id);
+    if (existing == _tabs.end()) {
+        std::printf("TM visitUrl not found\n");
+        return;
+    }
+    auto optionalUrl = _resolveQuery(query);
+    if (!optionalUrl.has_value()) {
+        std::printf("TM resolveQuery failed\n");
+        return;
+    }
+    _visitUrl(id, optionalUrl.value());
+}
+
+void TabManager::openInternalPage(InternalPageType type, bool isNewTab) {
+    auto newTabUrl = Url::parse(_searchSettings.baseUrl);
+    if (!newTabUrl.has_value()) {
+        std::printf("TM openInternalPage Url::parse failed\n");
+        return;
+    }
+    auto url = getInternalPageTypeUrl(type, type == InternalPageType::NewTab ? newTabUrl.value() : Url()); 
+    if (!url.has_value()) {
+        std::printf("TM openInternalPage url not found\n");
+        return;
+    }
+    TabId id;
+    if (isNewTab) {
+        id = createTab(url.value(), false);
+    } else {
+        id = _activeTabId;
+    }
+
+    auto tab = getTab(id);
+    if (tab == nullptr) {
+        std::printf("TM openInternalPage tab not found\n");
+        return;
+    }
+    tab->visitUrl(url.value());
+    _visitUrl(id, url.value());
+    if (auto type = tab->getInternalPageType(); type.has_value()) {
+        tab->changeTitle(getInternalPageTypeTitle(type.value()));
+    }
+    navigationCompleted.invoke(NavigationCompletedArgs{NavigationType::NewPage, 
+        getTab(id)->toTabInfo(),
+        });
+}
+
+// void TabManager::onEngineUrlChanged(TabId id, Url url) {
+//     _changeTabUrl(id, url);
+//     navigationRequested.invoke(
+//         NavigationRequestedArgs{NavigationType::Redirect, getTab(id)->toTabInfo()});
+// }
+
+// void TabManager::onEngineTitleChanged(TabId id, std::string title) {
+//     _changeTabTitle(id, title);
+//     titleChanged.invoke(TabTitleChangedArgs{id, title});
+// }
+
+void TabManager::onEngineUrlChanged(TabId id, Url url) {
+    Tab * tab = getTab(id);
+    if (tab == nullptr) {
+        std::printf("TM changeTabUrl tab not found\n");
+        return;
+    }
+    // если url тот же
+    if (tab->getUrl() == url) {
+        std::printf("TM changeTabUrl url same\n");
+        return;
+    } 
+    std::printf("TM changeTabUrl not same");
+    if (tab->getInternalPageType().has_value()) {
+        switch (tab->getInternalPageType().value()) {
+            case InternalPageType::NewTab:
+                return;
+            default:
+                break;
+        }
+    }
+
+    tab->changeUrl(url);
+    navigationCompleted.invoke(NavigationCompletedArgs{NavigationType::Redirect, getTab(id)->toTabInfo()});
+}
+
+void TabManager::onEngineTitleChanged(TabId id, std::string title) {
     std::printf("TM changeTabTitle");
     auto existing = _tabs.find(id);
-    if (existing != _tabs.end()) {
-        existing->second->changeTitle(title);
-        std::printf("TM changeTabTitle invoke titleChanged");
-        titleChanged.invoke(TabTitleChangedArgs{id, title});
-    } else {
-        std::printf(" not found\n");
+    if (existing == _tabs.end()) {
+        std::printf("TM changeTabTitle not found\n");
+        return;
     }
+    auto tab = existing->second.get();
+    if (tab->getInternalPageType().has_value()) {
+        switch (tab->getInternalPageType().value()) {
+            case InternalPageType::NewTab:
+                return;
+            default:
+                break;
+        }
+    }
+    existing->second->changeTitle(title);
+    titleChanged.invoke(TabTitleChangedArgs{id, title});
 }
 
 void TabManager::changeTabLoadingProgress(TabId id, int progress) {
@@ -114,8 +314,8 @@ void TabManager::goBack(TabId id) {
     auto existing = _tabs.find(id);
     if (existing != _tabs.end()) {
         existing->second->goBack();
-        navigationRequested.invoke(
-            NavigationRequestedArgs{NavigationType::Back, getTab(id)->toTabInfo()});
+        navigationCommand.invoke(
+            NavigationCommandArgs{NavigationType::Back, id, Url()});
     }
 }
 
@@ -123,8 +323,7 @@ void TabManager::goForward(TabId id) {
     auto existing = _tabs.find(id);
     if (existing != _tabs.end()) {
         existing->second->goForward();
-        navigationRequested.invoke(NavigationRequestedArgs{
-                                                           NavigationType::Forward, getTab(id)->toTabInfo()});
+        navigationCommand.invoke(NavigationCommandArgs{NavigationType::Forward, id, Url()});
     }
 }
 

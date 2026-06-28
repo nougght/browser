@@ -7,12 +7,15 @@
 
 
 using HistoryAddedCallback = std::function<void(std::optional<HistoryEntry>, RepositoryError)>;
+using HistoryUpdateCallback = std::function<void(RepositoryError)>;
 using HistoryDeletedCallback = std::function<void(RepositoryError)>;
 using HistoryGetCallback = std::function<void(std::vector<HistoryEntry>, RepositoryError)>;
 
 class IHistoryRepository {
 public:
     virtual void addVisit(HistoryEntry &entry, HistoryAddedCallback callback) = 0;
+    virtual void updateUrl(int64_t id, std::string url, HistoryUpdateCallback callback) = 0;
+    virtual void updateTitle(int64_t id, std::string title, HistoryUpdateCallback callback) = 0;
     virtual void deleteEntry(int64_t id, HistoryDeletedCallback callback) = 0;
     virtual void deleteAll(HistoryDeletedCallback callback) = 0;
 

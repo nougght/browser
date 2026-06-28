@@ -25,6 +25,10 @@ BrowserCore::BrowserCore()
             _tabManager->tabCreated.subscribe(
                 [this](TabInfo tabInfo) { this->tabCreated.invoke(tabInfo); })));
 
+        _subs.push_back(std::make_unique<Subscription<SearchEngine>>(
+            _tabManager->searchEngineLoaded.subscribe(
+                [this](SearchEngine engine) { searchEngineLoaded.invoke(engine); })));
+
         _subs.push_back(std::make_unique<Subscription<std::vector<TabInfo>>>(
             _tabManager->tabsLoaded.subscribe(
                 [this](std::vector<TabInfo> tabs) { tabsLoaded.invoke(tabs); })));
@@ -41,10 +45,16 @@ BrowserCore::BrowserCore()
             std::make_unique<Subscription<void>>(_tabManager->lastTabClosed.subscribe(
                 [this]() { lastTabClosed.invoke(); })));
 
-        _subs.push_back(std::make_unique<Subscription<NavigationRequestedArgs>>(
-            _tabManager->navigationRequested.subscribe(
-                [this](NavigationRequestedArgs args) {
-                    navigationRequested.invoke(args);
+        _subs.push_back(std::make_unique<Subscription<NavigationCommandArgs>>(
+            _tabManager->navigationCommand.subscribe(
+                [this](NavigationCommandArgs args) {
+                    navigationCommand.invoke(args);
+                })));
+
+        _subs.push_back(std::make_unique<Subscription<NavigationCompletedArgs>>(
+            _tabManager->navigationCompleted.subscribe(
+                [this](NavigationCompletedArgs args) {
+                    navigationCompleted.invoke(args);
                 })));
 
 
@@ -68,13 +78,24 @@ BrowserCore::BrowserCore()
 
         // history
 
-        // запись в историю добавляется при навигации на новую страницу
-        _subs.push_back(std::make_unique<Subscription<NavigationRequestedArgs>>(
-            this->navigationRequested.subscribe(
-                [this](NavigationRequestedArgs args) {
+        // обработка событий с вкладками для истории
+
+        // обновление истории после выполнения навигации
+        _subs.push_back(std::make_unique<Subscription<NavigationCompletedArgs>>(
+            _tabManager->navigationCompleted.subscribe(
+                [this](NavigationCompletedArgs args) {
                     _historyService->onNavigation(args);
                 })));
-                
+
+        _subs.push_back(std::make_unique<Subscription<TabTitleChangedArgs>>(
+            _tabManager->titleChanged.subscribe(
+                [this](TabTitleChangedArgs args) { _historyService->onTabTitleChanged(args.id, args.newTitle); })));
+
+        _subs.push_back(std::make_unique<Subscription<TabId>>(
+            _tabManager->tabClosed.subscribe(
+                [this](TabId id) { _historyService->onTabClosed(id); })));
+
+        // события из history service
         _subs.push_back(std::make_unique<Subscription<std::vector<HistoryEntry>>>(
             _historyService->historyLoaded.subscribe(
                 [this](std::vector<HistoryEntry> history) {
@@ -87,20 +108,26 @@ BrowserCore::BrowserCore()
                 std::cerr << "\n browser core history entry added\n";
                 historyEntryAdded.invoke(entry);
             })));
-        
+
+        _subs.push_back(std::make_unique<Subscription<HistoryEntry>>(
+            _historyService->entryUpdated.subscribe([this](HistoryEntry entry) {
+                std::cerr << "\n browser core history entry updated\n";
+                historyEntryUpdated.invoke(entry);
+            })));
+
         _subs.push_back(std::make_unique<Subscription<int64_t>>(
             _historyService->entryDeleted.subscribe(
-                [this](int64_t id) { 
+                [this](int64_t id) {
                     std::cerr << "\n browser core history entry deleted, id: " << id << "\n";
                     historyEntryDeleted.invoke(id); })));
 
         _subs.push_back(std::make_unique<Subscription<void>>(
             _historyService->historyCleared.subscribe(
-                [this]() { 
+                [this]() {
                     std::cerr << "\n browser core history cleared\n";
                     historyCleared.invoke(); })));
-        
-        
+
+
 
         // bookmarks
 
@@ -213,9 +240,9 @@ void BrowserCore::loadTabs() {
     //       { tabsLoaded.invoke(_tabManager->getTabInfos()); });
 }
 
-void BrowserCore::createTab(Url url) {
-    post([this, url = std::move(url)] {
-        TabId id = _tabManager->createTab(url);
+void BrowserCore::createTab(Url url, bool isBackground) {
+    post([this, url = std::move(url), isBackground] {
+        TabId id = _tabManager->createTab(url, isBackground);
         // TabInfo tabInfo = _tabManager->getTab(id)->toTabInfo();
         // tabCreated.invoke(tabInfo);
         // navigationCompleted.invoke(NavigationCompletedArgs{NavigationType::NewPage,
@@ -223,8 +250,8 @@ void BrowserCore::createTab(Url url) {
     });
 }
 
-void BrowserCore::createTab() {
-    post([this] { _tabManager->createTab(); });
+void BrowserCore::createTab(bool isBackground) {
+    post([this, isBackground] { _tabManager->createTab(isBackground); });
 }
 
 void BrowserCore::closeTab(TabId id) {
@@ -237,36 +264,82 @@ void BrowserCore::closeTab(TabId id) {
     });
 }
 
-void BrowserCore::visitUrl(TabId id, Url url) {
-    post([this, id, url] {
-        std::cerr << "\nVisitURL\n";
-        if (!id.isValid())
-            return;
-        _tabManager->visitUrl(id, url);
-        navigationRequested.invoke(NavigationRequestedArgs{
-                                                           NavigationType::NewPage, _tabManager->getTab(id)->toTabInfo()});
-        // urlVisited.invoke(UrlVisitedArgs{id, url});
+void BrowserCore::setSearchEngine(SearchEngine engine) {
+    post([this, engine] {
+        _tabManager->setSearchEngine(engine);
     });
 }
 
-void BrowserCore::changeTabUrl(TabId id, Url url) {
-    post([this, id, url] {
+void BrowserCore::handleSearchQuery(TabId id, std::string query) {
+    post([this, id, query] {
         if (!id.isValid())
             return;
-        _tabManager->changeTabUrl(id, url);
-        navigationRequested.invoke(NavigationRequestedArgs{
-                                                           NavigationType::Redirect, _tabManager->getTab(id)->toTabInfo()});
+        _tabManager->handleSearchQuery(id, query);
     });
 }
 
-void BrowserCore::changeTabTitle(TabId id, std::string title) {
-    std::printf("browser core change tab title");
+void BrowserCore::handleNavigationRequested(NavigationType type, TabId id, Url url) {
+    post([this, type, id, url] {
+        if (!id.isValid())
+            return;
+        _tabManager->onNavigationRequested(type, id, url);
+    });
+}
+
+void BrowserCore::openInternalPage(InternalPageType type, bool isNewTab)
+{
+    post([this, type, isNewTab] {
+        _tabManager->openInternalPage(type, isNewTab);
+    });
+}
+
+// void BrowserCore::visitUrl(TabId id, Url url) {
+//     post([this, id, url] {
+//         std::cerr << "\nVisitURL\n";
+//         if (!id.isValid())
+//             return;
+//         _tabManager->visitUrl(id, url);
+//         navigationRequested.invoke(NavigationRequestedArgs{
+//                                                            NavigationType::NewPage, _tabManager->getTab(id)->toTabInfo()});
+//         // urlVisited.invoke(UrlVisitedArgs{id, url});
+//     });
+// }
+
+void BrowserCore::onEngineUrlChanged(TabId id, Url url) {
+    post([this, id, url] {
+        if (!id.isValid())
+            return;
+        _tabManager->onEngineUrlChanged(id, url);
+    });
+}
+
+void BrowserCore::onEngineTitleChanged(TabId id, std::string title) {
     post([this, id, title] {
         if (!id.isValid())
             return;
-        _tabManager->changeTabTitle(id, title);
+        _tabManager->onEngineTitleChanged(id, title);
     });
+
 }
+
+// void BrowserCore::_changeTabUrl(TabId id, Url url) {
+//     post([this, id, url] {
+//         if (!id.isValid())
+//             return;
+//         _tabManager->changeTabUrl(id, url);
+//         navigationRequested.invoke(NavigationRequestedArgs{
+//                                                            NavigationType::Redirect, _tabManager->getTab(id)->toTabInfo()});
+//     });
+// }
+
+// void BrowserCore::_changeTabTitle(TabId id, std::string title) {
+//     std::printf("browser core change tab title");
+//     post([this, id, title] {
+//         if (!id.isValid())
+//             return;
+//         _tabManager->changeTabTitle(id, title);
+//     });
+// }
 
 void BrowserCore::setTabLoadingStatus(TabId id, bool isLoading) {
     post([this, id, isLoading] {

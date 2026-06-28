@@ -14,6 +14,7 @@
 #include "bookmarkspage.h"
 #include "browsermenu.h"
 #include "core/Identifier.h"
+#include "core/eventArgs.h"
 #include "historypage.h"
 #include "searchbar.h"
 #include "tabbarwithcontrol.h"
@@ -46,6 +47,10 @@ signals:
 
     
     void searchClicked(QString searchQuery);
+    void searchEngineChanged(SearchEngine engine);
+
+    void navigationRequested(NavigationType type, TabId id, Url url);
+    void newTabRequested(Url url, bool isBackground);
     void engineUrlChanged(TabId id, QUrl newUrl);
     void engineTitleChanged(TabId id, QString newTitle);
     void loadStarted(TabId id);
@@ -63,23 +68,24 @@ public slots:
     void addTab(TabInfo tabInfo);
     void closeTab(TabId id);
     void switchToTab(TabInfo tabInfo, bool isBookmarked);
+    void setSearchEngine(SearchEngine engine);
 
     void setLoadingBarVisible(bool isVisible);
     void setLoadingProgress(int progress);
     void setBackButtonEnabled(bool enabled);
     void setForwardButtonEnabled(bool enabled);
 
-    void updateUrlBar(QUrl newUrl);
+    void updateUrlBar(Url newUrl);
     // void updateTabTitle(TabId id, std::string title);
     void reloadTab(TabId id);
-    void navigateBack(TabInfo tabInfo, bool isBookmarked);
-    void navigateForward(TabInfo tabInfo, bool isBookmarked);
-    void visitUrl(TabInfo tab, bool isBookmarked);
-
+    void navigateBack(TabId tabId);
+    void navigateForward(TabId tabId);
+    void visitUrl(TabId tabId, Url url);
+    
+    void onNavigationCompleted(NavigationCompletedArgs args, bool isBookmarked);
 
     // TODO: move to navigation controller
-    void showHistoryPage();
-    void showBookmarksPage();
+    void showInternalPage(InternalPageType type);
 
     void switchActiveTabBookmark(bool isBookmarked);
 
@@ -88,7 +94,7 @@ private:
                  QAbstractListModel *bookmarksModel);
     void setupEvents();
     void setupTabViewEvents(TabId tabId, QWebEngineView *tabView);
-
+    void onSearchEngineChanged(SearchEngine engine);
     void menuClicked();
 
 
@@ -111,6 +117,6 @@ private:
     QWebEngineProfile* _profile;
     QStackedWidget *_stackedWidget;
 
-    std::map<TabId, QWebEngineView *> _tabWidgets;
+    std::map<TabId, QWebEngineView *> _tabViews;
 };
 #endif // MAINWINDOW_H

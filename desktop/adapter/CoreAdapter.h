@@ -27,17 +27,23 @@ public:
     }
     Url static convert(QUrl url)
     {
-        return Url(url.toString().toStdString());
+        auto optionalUrl = Url::parse(url.toString().toStdString());
+        if (!optionalUrl.has_value()) {
+            throw std::runtime_error("CoreAdapter convert QUrl to Url failed");
+        }
+        return optionalUrl.value();
     }
 
 signals:
     // tabs
     void tabsLoaded(std::vector<TabInfo> tabs);
+    void searchEngineLoaded(SearchEngine engine);
     void tabCreated(TabInfo tab);
     void tabClosed(TabId id);
     void lastTabClosed();
     void activeTabChanged(TabId id);
-    void navigationRequested(NavigationRequestedArgs args);
+    void navigationCommand(NavigationCommandArgs args);
+    void navigationCompleted(NavigationCompletedArgs args);
     void titleChanged(TabTitleChangedArgs args);
     void loadingStatusChanged(TabLoadingStatusChangedArgs args);
     void loadingProgressChanged(TabLoadingProgressChangedArgs args);
@@ -45,6 +51,7 @@ signals:
     // history
     void historyLoaded(std::vector<HistoryEntry> history);
     void historyEntryAdded(HistoryEntry entry);
+    void historyEntryUpdated(HistoryEntry entry);
     void historyEntryDeleted(int64_t id);
     void historyCleared();
 
@@ -55,14 +62,18 @@ signals:
 
 public slots:
     void loadTabs();
-    void createTab(QUrl url);
-    void createTab();
+    void createTab(Url url, bool isBackground);
+    void createTab(bool isBackground);
     void closeTab(TabId id);
     void changeActiveTab(TabId id);
     void moveTab(TabId id, int newIndex);
     void goForward(TabId id);
-    void goBack(TabId id);
-    void visitUrl(TabId id, QUrl url);
+    void goBack(TabId id);\
+    void setSearchEngine(SearchEngine engine);
+    void handleSearchQuery(TabId id, std::string query);
+    void openInternalPage(InternalPageType type, bool isNewTab);
+    
+    void handleNavigationRequested(NavigationType type, TabId id, Url url);
     void changeTabUrl(TabId id, QUrl url);
     void changeTabTitle(TabId id, QString title);
     void changeTabLoadingProgress(TabId id, int progress);

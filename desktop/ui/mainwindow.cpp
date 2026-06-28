@@ -1,12 +1,14 @@
 #include "mainwindow.h"
 #include "browsermenu.h"
+#include "ui/webenginepage.h"
 #include <QFile>
 #include <QPainter>
 #include <QPainterPath>
 #include <QTimer>
 #include <QVBoxLayout>
 #include <QWebEngineProfile>
-#include <Qt>
+#include <QWebEngineNavigationRequest>
+#include <QWebEngineNewWindowRequest>
 
 #include <core/eventArgs.h>
 #include <core/models.h>
@@ -52,6 +54,10 @@ void MainWindow::setupUI(QAbstractListModel *tabsModel,
     _rootLayout->addWidget(_centralWidget);
 
     _profile = new QWebEngineProfile();
+    _profile->setHttpUserAgent(
+        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
+        "AppleWebKit/537.36 (KHTML, like Gecko) "
+        "Chrome/122.0.0.0 Safari/537.36");
     connect(_profile, &QObject::destroyed, []{
         qDebug() << "profile destroyed";
     });
@@ -107,7 +113,7 @@ void MainWindow::setupUI(QAbstractListModel *tabsModel,
     _reloadButton->setObjectName("reloadButton");
     _reloadButton->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
 
-    _search = new SearchBar();
+    _search = new SearchBar(SearchEngine::Google);
 
     _menuButton = new QPushButton(QIcon(":/assets/grid.svg"), "");
     _menuButton->setObjectName("menuButton");
@@ -156,6 +162,8 @@ void MainWindow::setupEvents() {
     // отправляем сигналы при различных действиях пользователя
     connect(_search, &SearchBar::searchFinished, this,
             [this](QString query) { emit searchClicked(query); });
+
+    connect(_search, &SearchBar::searchEngineChanged, this, &MainWindow::onSearchEngineChanged);
 
     connect(_search, &SearchBar::bookmarkToggled, this,
             [this]() { emit bookmarkToggled(); });
@@ -218,23 +226,84 @@ void MainWindow::setupEvents() {
 void MainWindow::setupTabViewEvents(TabId tabId, QWebEngineView *tabView) {
     tabView->setObjectName("tabView");
     // настраиваем сигналы при различных событиях от движка
-    connect(tabView, &QWebEngineView::urlChanged, this,
+
+    connect(tabView->page(), &QWebEnginePage::navigationRequested, this,
+            [this, id = tabId](QWebEngineNavigationRequest &request) { 
+                 if (!request.isMainFrame()) {
+                    return;
+                 }
+                 NavigationType type;
+                 switch (request.navigationType()) {
+                    case QWebEngineNavigationRequest::NavigationType::LinkClickedNavigation:
+                        type = NavigationType::NewPage;
+                        break;
+                    case QWebEngineNavigationRequest::NavigationType::TypedNavigation:
+                        type = NavigationType::NewPage;
+                        break;
+                    case QWebEngineNavigationRequest::NavigationType::FormSubmittedNavigation:
+                        type = NavigationType::NewPage;
+                        break;
+                    case QWebEngineNavigationRequest::NavigationType::BackForwardNavigation:
+                        type = NavigationType::BackForwardCompleted;
+                        break;
+                    case QWebEngineNavigationRequest::NavigationType::ReloadNavigation:
+                        type = NavigationType::Reload;
+                        break;
+                    default:
+                        type = NavigationType::Redirect;
+                 }
+                 auto url = Url::parse(request.url().toString().toStdString());
+                 if (!url.has_value()) {
+                    qDebug() << "navigation requested: invalid url";
+                    return;
+                 }
+                 emit navigationRequested(type, id, url.value());
+            });
+
+    connect(tabView->page(), &QWebEnginePage::newWindowRequested, this,
+            [this, id = tabId](QWebEngineNewWindowRequest &request) { 
+                qDebug() << "new window requested " << request.requestedUrl().toString();
+                auto url = Url::parse(request.requestedUrl().toString().toStdString());
+                if (!url.has_value()) {
+                    qDebug() << "new window requested: invalid url";
+                    return;
+                }
+                switch (request.destination()) {
+                    case QWebEngineNewWindowRequest::DestinationType::InNewTab:{
+                        emit newTabRequested(url.value(), false);
+                            break;
+                    }
+                    case QWebEngineNewWindowRequest::DestinationType::InNewWindow:
+                        qDebug() << "new window requested: in new window";
+                        break;
+                    case QWebEngineNewWindowRequest::DestinationType::InNewDialog:
+                        qDebug() << "new window requested: in new dialog";
+                        break;
+                    case QWebEngineNewWindowRequest::DestinationType::InNewBackgroundTab:
+                        qDebug() << "new window requested: in new background tab";
+                        emit newTabRequested(url.value(), true);
+                        break;
+                }
+            });
+
+    connect(tabView->page(), &QWebEnginePage::urlChanged, this,
             [this, id = tabId](QUrl url) { emit engineUrlChanged(id, url); });
 
-    connect(tabView, &QWebEngineView::titleChanged, this,
+    connect(tabView->page(), &QWebEnginePage::titleChanged, this,
             [this, id = tabId](QString title) {
         emit engineTitleChanged(id, title);
     });
 
-    connect(tabView, &QWebEngineView::loadStarted, this,
+    connect(tabView->page(), &QWebEnginePage::loadStarted, this,
             [this, id = tabId]() { emit loadStarted(id); });
 
-    connect(tabView, &QWebEngineView::loadFinished, this,
+    connect(tabView->page(), &QWebEnginePage::loadFinished, this,
             [this, id = tabId]() { emit loadFinished(id); });
 
     connect(
-        tabView, &QWebEngineView::loadProgress, this,
+        tabView->page(), &QWebEnginePage::loadProgress, this,
         [this, id = tabId](int progress) { emit loadProgress(id, progress); });
+
 
     connect(tabView, &QObject::destroyed, []{
         qDebug() << "view destroyed";
@@ -244,49 +313,82 @@ void MainWindow::setupTabViewEvents(TabId tabId, QWebEngineView *tabView) {
     });
 }
 
-void MainWindow::visitUrl(TabInfo tab, bool isBookmarked) {
-    _tabWidgets[tab.id]->load(convert(tab.url));
-    switchActiveTabBookmark(isBookmarked);
+void MainWindow::visitUrl(TabId tabId, Url url) {
+    if (url.isInternal()) {
+        auto optionalType = url.getInternalPageType();
+        if (optionalType.has_value()) {
+            auto type = optionalType.value();
+            switch (type) {
+                case InternalPageType::NewTab:
+                    if (auto newTabUrl = url.getNewTabUrl(); newTabUrl.has_value()) {
+                        url = newTabUrl.value();
+                    } else {
+                        throw std::runtime_error("new tab url not found");
+                    }
+                    break;
+                default:
+                    showInternalPage(type);
+                    return;
+            }
+        } else {
+            throw std::runtime_error("internal page type not found");
+        }
+    }
+    if (_tabViews.find(tabId) != _tabViews.end()) {
+        _tabViews[tabId]->load(convert(url));
+    } else {
+        QTimer::singleShot(5, this, [=]() {
+            _tabViews[tabId]->load(convert(url));
+        });
+    }
 }
 
-void MainWindow::showHistoryPage() {
-    qDebug() << "show history";
-    _stackedWidget->setCurrentWidget(_historyPage);
-}
 
-void MainWindow::showBookmarksPage() {
-    qDebug() << "show bookmarks";
-    _stackedWidget->setCurrentWidget(_bookmarksPage);
-}
+void MainWindow::reloadTab(TabId id) { _tabViews[id]->reload(); }
 
-void MainWindow::reloadTab(TabId id) { _tabWidgets[id]->reload(); }
-
-void MainWindow::navigateBack(TabInfo tabInfo, bool isBookmarked) {
-    _tabWidgets[tabInfo.id]->back();
-    switchActiveTabBookmark(isBookmarked);
+void MainWindow::navigateBack(TabId tabId) {
+    _tabViews[tabId]->back();
     // _tabBar->updateTabNavigation(tabInfo.id, tabInfo.canGoBack,
     // tabInfo.canGoForward);
 }
-void MainWindow::navigateForward(TabInfo tabInfo, bool isBookmarked) {
-    _tabWidgets[tabInfo.id]->forward();
-    switchActiveTabBookmark(isBookmarked);
+
+void MainWindow::navigateForward(TabId tabId) {
+    _tabViews[tabId]->forward();
     // _tabBar->updateTabNavigation(tabInfo.id, tabInfo.canGoBack,
     // tabInfo.canGoForward);
+}
+
+
+void MainWindow::onNavigationCompleted(NavigationCompletedArgs args, bool isBookmarked) {
+    switchActiveTabBookmark(isBookmarked);
+}
+
+void MainWindow::updateUrlBar(Url newUrl) {
+    std::string url = newUrl.toStdString();
+    qDebug() << "update url bar: " << newUrl.toStdString();
+    if (_search->text().toStdString() != url) {
+        QSignalBlocker blocker(_search);
+        _search->setText(QString::fromStdString(url));
+        _search->setCursorPosition(0);
+    }
+}
+
+void MainWindow::showInternalPage(InternalPageType type) {
+    qDebug() << "show internal page: " << static_cast<int>(type);
+    switch (type) {
+        case InternalPageType::History:
+            _stackedWidget->setCurrentWidget(_historyPage);
+            break;
+        case InternalPageType::Bookmarks:
+            _stackedWidget->setCurrentWidget(_bookmarksPage);
+            break;
+    }
 }
 
 // add multiple tabs
 void MainWindow::addTabs(std::vector<TabInfo> tabs) {
     for (int i = 0; i < tabs.size(); ++i) {
-        auto tabWidget = new QWebEngineView();
-        auto page = new QWebEnginePage(_profile, tabWidget);
-        tabWidget->setPage(page);
-
-        _stackedWidget->addWidget(tabWidget);
-
-        setupTabViewEvents(tabs[i].id, tabWidget);
-
-        tabWidget->load(convert(tabs[i].url));
-        _tabWidgets[tabs[i].id] = std::move(tabWidget);
+        addTab(tabs[i]);
     }
     TabId lastId = tabs.back().id;
     // _tabBar->setInitialTabs(std::move(tabs));
@@ -294,42 +396,54 @@ void MainWindow::addTabs(std::vector<TabInfo> tabs) {
 
 // add single tab
 void MainWindow::addTab(TabInfo tabInfo) {
-    // _tabBar->addTab(tabInfo);
+    auto view = new QWebEngineView(this);
+    auto page = new WebEnginePage(_profile, view);
+    view->setPage(page);
 
-    auto tabWidget = new QWebEngineView(this);
+    _stackedWidget->addWidget(view);
 
-    _stackedWidget->addWidget(tabWidget);
-
-    setupTabViewEvents(tabInfo.id, tabWidget);
-    tabWidget->load(convert(tabInfo.url));
-    _tabWidgets[tabInfo.id] = std::move(tabWidget);
+    setupTabViewEvents(tabInfo.id, view);
+    
+    _tabViews[tabInfo.id] = std::move(view);
 
 }
 
 void MainWindow::closeTab(TabId id) {
-    if (_tabWidgets.count(id) == 0)
+    if (_tabViews.count(id) == 0)
         return;
 
-    auto tab = _tabWidgets[id];
+    auto tab = _tabViews[id];
     _stackedWidget->removeWidget(tab);
-    _tabWidgets.erase(id);
+    _tabViews.erase(id);
     tab->deleteLater();
 }
 
 
 // switch active tab
 void MainWindow::switchToTab(TabInfo tabInfo, bool isBookmarked) {
-    auto it = _tabWidgets.find(tabInfo.id);
-    if (it != _tabWidgets.end()) {
-        _stackedWidget->setCurrentWidget(it->second);
-
-        it->second->setFocus();
+    auto it = _tabViews.find(tabInfo.id);
+    if (it != _tabViews.end()) {
+        if (auto type = tabInfo.url.getInternalPageType(); type.has_value() && type.value() != InternalPageType::NewTab) {
+            if (type.has_value()) {
+                showInternalPage(type.value());
+                return;
+            }
+        } else{
+            _stackedWidget->setCurrentWidget(it->second);
+            it->second->setFocus();
+        }
         // _activeTabId = tabId;
 
         _backButton->setEnabled(tabInfo.canGoBack);
         _forwardButton->setEnabled(tabInfo.canGoForward);
 
+        Url url = tabInfo.url;
+        if (auto type = tabInfo.url.getInternalPageType(); type.has_value() && type.value() == InternalPageType::NewTab) {
+            url = Url();
+        }
+        updateUrlBar(url);
         switchActiveTabBookmark(isBookmarked);
+
         // QTimer::singleShot(1, this, [=]() {
         //     QMetaObject::invokeMethod(
         //         this,
@@ -342,6 +456,11 @@ void MainWindow::switchToTab(TabInfo tabInfo, bool isBookmarked) {
         // });
     }
 }
+
+void MainWindow::setSearchEngine(SearchEngine engine) {
+    _search->setSearchEngine(engine);
+}
+
 
 void MainWindow::setLoadingBarVisible(bool isVisible) {
     _prgsBarPlaceholder->setVisible(!isVisible);
@@ -360,13 +479,8 @@ void MainWindow::setForwardButtonEnabled(bool enabled) {
     _forwardButton->setEnabled(enabled);
 }
 
-void MainWindow::updateUrlBar(QUrl newUrl) {
-    qDebug() << "update url bar: " << newUrl.toString();
-    if (_search->text() != newUrl) {
-        QSignalBlocker blocker(_search);
-        _search->setText(newUrl.toString());
-        _search->setCursorPosition(0);
-    }
+void MainWindow::onSearchEngineChanged(SearchEngine engine) {
+    emit searchEngineChanged(engine);
 }
 
 void MainWindow::menuClicked() {

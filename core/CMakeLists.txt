@@ -13,8 +13,8 @@ set(CORE_SOURCES
     src/BrowserCore.cpp
     src/domain/Url.cpp
     src/domain/Tab.h
-
     src/domain/TabHistory.h
+    src/domain/types.cpp
     src/interfaces/IHistoryRepository.h
     src/storage/DatabaseManager.h
     src/storage/DatabaseManager.cpp
@@ -28,6 +28,9 @@ set(CORE_SOURCES
     src/services/tabs/TabIdGenerator.h
     src/services/history/HistoryService.h
     src/services/history/HistoryService.cpp
+    src/services/bookmarks/BookmarkService.h src/services/bookmarks/BookmarkService.cpp
+    src/storage/repositories/BookmarkRepository.h src/storage/repositories/BookmarkRepository.cpp
+    src/util/util.cpp src/util/util.h
 
 
 )
@@ -36,8 +39,6 @@ find_package(unofficial-sqlite3 CONFIG REQUIRED)
 add_library(browser_core STATIC
     ${CORE_SOURCES}
     src/storage/sql/init.sql
-    src/services/bookmarks/BookmarkService.h src/services/bookmarks/BookmarkService.cpp
-    src/storage/repositories/BookmarkRepository.h src/storage/repositories/BookmarkRepository.cpp
 
 )
 
@@ -46,10 +47,18 @@ add_custom_command(TARGET browser_core POST_BUILD
     ${CMAKE_CURRENT_SOURCE_DIR}/src/storage/sql/init.sql
     $<TARGET_FILE_DIR:browser_core>
 )
+add_subdirectory(
+    ${CMAKE_CURRENT_SOURCE_DIR}/../third_party/ada
+    ${CMAKE_BINARY_DIR}/third_party/ada
+    EXCLUDE_FROM_ALL
+)
 
 target_link_libraries(browser_core PRIVATE
     unofficial::sqlite3::sqlite3
+    ada::ada
 )
+
+# target_include_directories, если только headers
 
 target_include_directories(browser_core 
     PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include

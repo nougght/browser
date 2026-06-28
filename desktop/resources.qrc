@@ -13,5 +13,12 @@
         <file>assets/wrap.svg</file>
         <file>assets/separator.svg</file>
         <file>assets/separator-hover.svg</file>
+        <file>assets/circle-filled.svg</file>
+        <file>assets/circle-filled-blue.svg</file>
+        <file>assets/circle-filled-orange.svg</file>
+        <file>assets/circle-filled-red.svg</file>
+        <file>assets/duckduckgo-icon.svg</file>
+        <file>assets/google-icon.svg</file>
+        <file>assets/yandex-icon.svg</file>
     </qresource>
 </RCC>

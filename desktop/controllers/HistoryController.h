@@ -17,6 +17,7 @@ public:
     // slots for core signals
     void onHistoryLoaded(std::vector<HistoryEntry>);
     void onEntryAdded(HistoryEntry entry);
+    void onEntryUpdated(HistoryEntry entry);
     void onEntryDeleted(int64_t id);
     void onHistoryCleared();
 
@@ -29,6 +30,7 @@ signals:
     void entryAdded(HistoryEntry entry);
 
     // unused
+    void entryUpdated(HistoryEntry entry);
     void entryDeleted(int64_t id);
     void historyCleared();
 

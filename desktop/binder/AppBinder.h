@@ -13,18 +13,23 @@ public:
               HistoryController *historyController)
          {
 
-        QObject::connect(tabsController, &TabsController::urlVisitRequested,
+        QObject::connect(tabsController, &TabsController::urlVisitCommand,
                          mainWindow, &MainWindow::visitUrl);
-        QObject::connect(tabsController, &TabsController::backNavigationRequested,
+        QObject::connect(tabsController, &TabsController::backNavigationCommand,
                          mainWindow, &MainWindow::navigateBack);
         QObject::connect(tabsController,
-                         &TabsController::forwardNavigationRequested, mainWindow,
+                         &TabsController::forwardNavigationCommand, mainWindow,
                          &MainWindow::navigateForward);
-        QObject::connect(tabsController, &TabsController::reloadRequested,
+        QObject::connect(tabsController, &TabsController::reloadCommand,
                          mainWindow, &MainWindow::reloadTab);
+        
+        QObject::connect(tabsController, &TabsController::navigationCompleted,
+                         mainWindow, &MainWindow::onNavigationCompleted);
 
         QObject::connect(tabsController, &TabsController::tabsLoaded, mainWindow,
                          &MainWindow::addTabs);
+        QObject::connect(tabsController, &TabsController::searchEngineLoaded, mainWindow,
+                         &MainWindow::setSearchEngine);
         QObject::connect(tabsController, &TabsController::tabCreated, mainWindow,
                          &MainWindow::addTab);
         QObject::connect(tabsController, &TabsController::tabClosed, mainWindow,
@@ -60,10 +65,10 @@ public:
 
         QObject::connect(mainController,
                          &MainWindowController::historyPageRequested, mainWindow,
-                         &MainWindow::showHistoryPage);
+                         [mainWindow] { mainWindow->showInternalPage(InternalPageType::History); });
         QObject::connect(mainController,
                          &MainWindowController::bookmarksPageRequested, mainWindow,
-                         &MainWindow::showBookmarksPage);
+                         [mainWindow] { mainWindow->showInternalPage(InternalPageType::Bookmarks); });
 
 
 
@@ -79,6 +84,13 @@ public:
                          &TabsController::onForwardClicked);
         QObject::connect(mainWindow, &MainWindow::searchClicked, tabsController,
                          &TabsController::onSearchRequested);
+        QObject::connect(mainWindow, &MainWindow::searchEngineChanged, tabsController,
+                         &TabsController::onSearchEngineChanged);
+
+        QObject::connect(mainWindow, &MainWindow::navigationRequested,
+                         tabsController, &TabsController::onNavigationRequested);
+        QObject::connect(mainWindow, &MainWindow::newTabRequested, tabsController,
+                         &TabsController::onNewTabRequested);
         QObject::connect(mainWindow, &MainWindow::engineUrlChanged,
                          tabsController, &TabsController::onEngineUrlChanged);
         QObject::connect(mainWindow, &MainWindow::engineTitleChanged,

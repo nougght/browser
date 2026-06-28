@@ -14,11 +14,15 @@ public:
     TabsController(CoreAdapter *coreAdapter, UIContext *ctx);
     // slots for core signals
     void onTabsLoaded(std::vector<TabInfo>);
+    void onSearchEngineLoaded(SearchEngine engine);
     void onTabCreated(TabInfo tabInfo);
     void onTabClosed(TabId id);
     void onLastTabClosed();
     void onActiveTabChanged(TabId id);
-    void onNavigationRequested(NavigationRequestedArgs args);
+
+    void onNavigationCommand(NavigationCommandArgs args);
+    void onNavigationCompleted(NavigationCompletedArgs args);
+
     void onTabTitleChanged(TabTitleChangedArgs args);
     void onLoadingStatusChanged(TabLoadingStatusChangedArgs args);
     void onLoadingProgressChanged(TabLoadingProgressChangedArgs args);
@@ -32,6 +36,10 @@ public:
 
     // slots for ui signals
     void onSearchRequested(QString searchQuery);
+    void onSearchEngineChanged(SearchEngine engine);
+
+    void onNavigationRequested(NavigationType type, TabId id, Url url);
+    void onNewTabRequested(Url url, bool isBackground);
     void onEngineUrlChanged(TabId id, QUrl newUrl);
     void onEngineTitleChanged(TabId id, QString newTitle);
     void onLoadStarted(TabId id);
@@ -45,16 +53,22 @@ public:
     void onForwardClicked();
 
 signals:
-    void urlVisitRequested(TabInfo tab, bool isBookmarked);
-    void backNavigationRequested(TabInfo tab, bool isBookmarked);
-    void forwardNavigationRequested(TabInfo tab, bool isBookmarked);
-    void reloadRequested(TabId tabId);
+    // navigation commands
+    void urlVisitCommand(TabId tabId, Url url);
+    void backNavigationCommand(TabId tabId);
+    void forwardNavigationCommand(TabId tabId);
+    void reloadCommand(TabId tabId);
 
-    void activeTabUrlChanged(QUrl newUrl);
+    // navigation completed notification
+    void navigationCompleted(NavigationCompletedArgs args, bool isBookmarked);
+    
+
+    void activeTabUrlChanged(Url newUrl);
     void backNavigationAvailabilityChanged(bool canGoBack);
     void forwardNavigationAvailabilityChanged(bool canGoForward);
 
     void tabsLoaded(std::vector<TabInfo> tabs);
+    void searchEngineLoaded(SearchEngine engine);
     void tabCreated(TabInfo tabInfo);
     void tabClosed(TabId id);
     void lastTabClosed();

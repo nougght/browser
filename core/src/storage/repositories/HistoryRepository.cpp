@@ -39,6 +39,54 @@ void HistoryRepository::addVisit(HistoryEntry &entry,
     });
 }
 
+void HistoryRepository::updateUrl(int64_t id, std::string url, HistoryUpdateCallback callback) {
+    _dbManager->post([this, id = std::move(id), url = std::move(url), callback = std::move(callback)](sqlite3 *db) {
+        sqlite3_stmt *stmt = nullptr;
+
+        sqlite3_prepare_v2(db, "UPDATE history SET url = ?, title = ?"
+                               "WHERE id = ?", -1, &stmt, nullptr);
+        sqlite3_bind_text(stmt, 1, url.c_str(), -1, SQLITE_STATIC);
+        sqlite3_bind_int64(stmt, 2, id);
+        auto rc = sqlite3_step(stmt);
+        
+        RepositoryError error;
+        if (rc == SQLITE_DONE) {
+            error = RepositoryError{RepositoryErrorCode::Success, ""};
+        } else if (rc == SQLITE_NOTFOUND) {
+            error = RepositoryError{RepositoryErrorCode::NotFound, "Entry not found"};
+        } else {
+            error = RepositoryError{RepositoryErrorCode::DatabaseError, sqlite3_errstr(rc)};
+        }
+
+        _dispatcher->post([callback = std::move(callback), error = std::move(error)]{
+            callback(error);
+        });
+    });
+}
+
+void HistoryRepository::updateTitle(int64_t id, std::string title, HistoryUpdateCallback callback) {
+    _dbManager->post([this, id = std::move(id), title = std::move(title), callback = std::move(callback)](sqlite3 *db) {
+        sqlite3_stmt *stmt = nullptr;
+        sqlite3_prepare_v2(db, "UPDATE history SET title = ? WHERE id = ?", -1, &stmt, nullptr);
+        sqlite3_bind_text(stmt, 1, title.c_str(), -1, SQLITE_STATIC);
+        sqlite3_bind_int64(stmt, 2, id);
+        auto rc = sqlite3_step(stmt);
+        RepositoryError error;
+
+        if (rc == SQLITE_DONE) {
+            error = RepositoryError{RepositoryErrorCode::Success, ""};
+        } else if (rc == SQLITE_NOTFOUND) {
+            error = RepositoryError{RepositoryErrorCode::NotFound, "Entry not found"};
+        } else {
+            error = RepositoryError{RepositoryErrorCode::DatabaseError, sqlite3_errstr(rc)};
+        }
+
+        _dispatcher->post([callback = std::move(callback), error = std::move(error)]{
+            callback(error);
+        });
+    });
+}
+
 void HistoryRepository::getHistory(HistoryGetCallback callback) {
     _dbManager->post([this, callback = std::move(callback)](sqlite3 *db) {
         sqlite3_stmt *stmt = nullptr;

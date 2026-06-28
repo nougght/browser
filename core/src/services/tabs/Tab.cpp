@@ -1,6 +1,6 @@
 #include "domain/Tab.h"
 
-Tab::Tab(TabId id, Url url) : _id(id), _url(url), _isLoading(false), _loadingProgress(0)
+Tab::Tab(TabId id, Url url, std::string title) : _id(id), _url(url), _title(title), _isLoading(false), _loadingProgress(0)
 {
     _history.addUrl(url);
 }
@@ -29,7 +29,7 @@ TabInfo Tab::toTabInfo()
 {
     TabInfo info{_id, _url, _title,
         canGoBack(), canGoForward(), _isLoading};
-    std::cerr << "\nTabInfo " << _id.value << "\n" << _url.value << "\n" << _title << "\n" << _isLoading << "\n" << info.canGoBack << "\n" << info.canGoForward << "\n\n";
+    std::cerr << "\nTabInfo " << _id.value << "\n" << _url.toStdString() << "\n" << _title << "\n" << _isLoading << "\n" << info.canGoBack << "\n" << info.canGoForward << "\n\n";
     return info;
 }
 
@@ -78,9 +78,6 @@ void Tab::goBack()
 
     _url = _history.currentItem()->url;
     _title = _history.currentItem()->title;
-
-
-    NavigationRequested.invoke(NavigationRequestedArgs{NavigationType::Back, toTabInfo()});
 }
 
 // void Tab::goBack()
@@ -115,10 +112,9 @@ void Tab::goForward()
     _url = _history.currentItem()->url;
     _title = _history.currentItem()->title;
 
-    NavigationRequested.invoke(NavigationRequestedArgs{NavigationType::Forward, toTabInfo()});
 }
 
-void Tab::changeTitle(std::string &title)
+void Tab::changeTitle(const std::string &title)
 {
     _history.changeCurrentTitle(title);
     _title = title;
