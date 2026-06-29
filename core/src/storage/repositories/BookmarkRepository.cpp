@@ -12,13 +12,15 @@ void BookmarkRepository::addBookmark(Bookmark &bookmark,
                       callback = std::move(callback)](sqlite3 *db) mutable {
         sqlite3_stmt *stmt = nullptr;
         sqlite3_prepare_v2(db,
-                           "INSERT INTO bookmarks(url, title) VALUES(?, ?)"
+                           "INSERT INTO bookmarks(url, title, folder_id, created_at) VALUES(?, ?, ?, ?)"
                            "RETURNING id",
                            -1, &stmt, nullptr);
 
         sqlite3_bind_text(stmt, 1, bookmark.url.c_str(), -1, SQLITE_STATIC);
         sqlite3_bind_text(stmt, 2, bookmark.title.c_str(), -1, SQLITE_STATIC);
-
+        sqlite3_bind_int64(stmt, 3, bookmark.folderId);
+        sqlite3_bind_int64(stmt, 4, bookmark.createdAt.Milliseconds());
+        
         int rc = sqlite3_step(stmt);
         RepositoryError error;
         if (rc == SQLITE_ROW) {
@@ -68,8 +70,9 @@ void BookmarkRepository::getBookmarks(
             int64_t id = sqlite3_column_int64(stmt, 0);
             std::string url = (const char *)sqlite3_column_text(stmt, 1);
             std::string title = (const char *)sqlite3_column_text(stmt, 2);
+            int64_t folder_id = sqlite3_column_int64(stmt, 3);
             int64_t created_at = sqlite3_column_int64(stmt, 4);
-            result.push_back(Bookmark{id, url, title});
+            result.push_back(Bookmark{id, url, title, folder_id, Timestamp::FromMilliseconds(created_at)});
         }
 
         sqlite3_finalize(stmt);

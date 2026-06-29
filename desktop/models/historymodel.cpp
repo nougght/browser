@@ -1,4 +1,5 @@
 #include "historymodel.h"
+#include "util/util.h"
 
 HistoryModel::HistoryModel(QObject *parent)
     : QAbstractListModel{parent}, _history()
@@ -15,7 +16,9 @@ QVariant HistoryModel::data(const QModelIndex &index, int role) const
 
     if (role == Qt::DisplayRole)
         return QString::fromStdString(entry.title) + " " + QString::fromStdString(entry.url);
-
+    if (role == HistoryRoles::TimeRole) {
+        return formatTimeLocal(entry.visitTime);
+    }
     return QVariant();
 }
 
@@ -82,6 +85,7 @@ void HistoryModel::updateEntry(const HistoryEntry &entry) {
     }
     emit dataChanged(index(ind.value()), index(ind.value()), {Qt::DisplayRole});
 }
+
 void HistoryModel::removeEntry(int64_t id)
 {
     auto ind = _getIndexById(id);
