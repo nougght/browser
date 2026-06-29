@@ -105,6 +105,7 @@ void TabManager::onNavigationRequested(NavigationType type, TabId id, Url url) {
             if (tab->getInternalPageType().has_value()) {
                 switch (tab->getInternalPageType().value()) {
                     case InternalPageType::NewTab:
+                    if (tab->getUrl().getNewTabUrl() == url)
                         return;
                     default:
                         break;
