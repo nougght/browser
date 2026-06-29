@@ -53,6 +53,9 @@ void BookmarkService::switchActiveTabBookmark(){
 }
 
 void BookmarkService::addBookmark(Bookmark bookmark) {
+    if (bookmark.createdAt.isNull()) {
+        bookmark.createdAt = Timestamp::Now();
+    }
     _repo->addBookmark(bookmark, [this](std::optional<Bookmark> bookmark, RepositoryError error) {
         if (error.code == RepositoryErrorCode::Success) {
             if (bookmark) {

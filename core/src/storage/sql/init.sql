@@ -2,7 +2,7 @@ CREATE TABLE IF NOT EXISTS history (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             url TEXT NOT NULL,
             title TEXT NOT NULL,
-            visit_time INTEGER);
+            visit_time INTEGER NOT NULL);
 
 CREATE TABLE IF NOT EXISTS bookmarks (
             id INTEGER PRIMARY KEY AUTOINCREMENT,

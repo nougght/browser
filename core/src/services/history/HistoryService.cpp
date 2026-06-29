@@ -1,4 +1,5 @@
 #include "HistoryService.h"
+#include "core/Timestamp.h"
 
 HistoryService::HistoryService(IHistoryRepository *historyRepo)
     : _historyRepo(historyRepo) {}
@@ -8,7 +9,8 @@ HistoryService::HistoryService(IHistoryRepository *historyRepo)
 void HistoryService::_addVisit(TabId tabId, Url url, std::string title) {
     _tabUrlBuffer[tabId] = url;
     _tabTitleBuffer[tabId] = title;
-    auto entry = HistoryEntry{0, url.toStdString(), title, 0};
+    auto visitTime = Timestamp::Now();
+    auto entry = HistoryEntry{0, url.toStdString(), title, visitTime};
     _historyRepo->addVisit(entry, [this, tabId, url, title](std::optional<HistoryEntry> createdEntry, RepositoryError error) {
         if (error.code == RepositoryErrorCode::Success) {
             if (createdEntry) {

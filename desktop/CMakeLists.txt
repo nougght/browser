@@ -9,8 +9,8 @@ set(CMAKE_AUTORCC ON)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-find_package(QT NAMES Qt6 Qt5 REQUIRED COMPONENTS Widgets WebEngineWidgets LinguistTools)
-find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Widgets WebEngineWidgets LinguistTools)
+find_package(QT NAMES Qt6 Qt5 REQUIRED COMPONENTS Core Widgets WebEngineWidgets LinguistTools)
+find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Core Widgets WebEngineWidgets LinguistTools)
 
 set(TS_FILES desktop_ru_RU.ts)
 
@@ -51,7 +51,7 @@ set(PROJECT_SOURCES
         ui/historydelegate.h ui/historydelegate.cpp
         ui/bookmarkdelegate.h ui/bookmarkdelegate.cpp
         ui/webenginepage.cpp ui/webenginepage.h
-
+        util/util.h util/util.cpp
         ${TS_FILES}
 )
 
@@ -95,6 +95,7 @@ add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/../third_party/qwindowkit
                  ${CMAKE_BINARY_DIR}/third_party/qwindowkit
                  EXCLUDE_FROM_ALL)
 target_link_libraries(desktop PRIVATE
+    Qt${QT_VERSION_MAJOR}::Core
     Qt${QT_VERSION_MAJOR}::Widgets
     Qt${QT_VERSION_MAJOR}::WebEngineWidgets
     QWindowKit::Widgets

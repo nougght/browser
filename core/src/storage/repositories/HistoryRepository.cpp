@@ -1,6 +1,7 @@
 #include "HistoryRepository.h"
 #include "domain/InternalErrors.h"
 #include <iostream>
+#include <sqlite3.h>
 
 HistoryRepository::HistoryRepository(DatabaseManager *dbManager,
                                      ICoreDispatcher *dispatcher)
@@ -12,12 +13,13 @@ void HistoryRepository::addVisit(HistoryEntry &entry,
                       callback = std::move(callback)](sqlite3 *db) mutable {
         sqlite3_stmt *stmt = nullptr;
 
-        sqlite3_prepare_v2(db, "INSERT INTO history(url, title) VALUES(?, ?)"
+        sqlite3_prepare_v2(db, "INSERT INTO history(url, title, visit_time) VALUES(?, ?, ?)"
             "RETURNING id", -1,
                            &stmt, nullptr);
 
         sqlite3_bind_text(stmt, 1, entry.url.c_str(), -1, SQLITE_STATIC);
         sqlite3_bind_text(stmt, 2, entry.title.c_str(), -1, SQLITE_STATIC);
+        sqlite3_bind_int64(stmt, 3, entry.visitTime.Milliseconds());
         int rc = sqlite3_step(stmt);
 
         RepositoryError error;
@@ -43,7 +45,7 @@ void HistoryRepository::updateUrl(int64_t id, std::string url, HistoryUpdateCall
     _dbManager->post([this, id = std::move(id), url = std::move(url), callback = std::move(callback)](sqlite3 *db) {
         sqlite3_stmt *stmt = nullptr;
 
-        sqlite3_prepare_v2(db, "UPDATE history SET url = ?, title = ?"
+        sqlite3_prepare_v2(db, "UPDATE history SET url = ?"
                                "WHERE id = ?", -1, &stmt, nullptr);
         sqlite3_bind_text(stmt, 1, url.c_str(), -1, SQLITE_STATIC);
         sqlite3_bind_int64(stmt, 2, id);
@@ -91,7 +93,8 @@ void HistoryRepository::getHistory(HistoryGetCallback callback) {
     _dbManager->post([this, callback = std::move(callback)](sqlite3 *db) {
         sqlite3_stmt *stmt = nullptr;
 
-        sqlite3_prepare_v2(db, "SELECT * FROM history", -1, &stmt, nullptr);
+        sqlite3_prepare_v2(db, "SELECT * FROM history "
+                               "ORDER BY visit_time DESC", -1, &stmt, nullptr);
 
         std::vector<HistoryEntry> result;
         std::cerr << "vector size = " << result.size() << std::endl;
@@ -101,7 +104,7 @@ void HistoryRepository::getHistory(HistoryGetCallback callback) {
             std::string url = (const char *)sqlite3_column_text(stmt, 1);
             std::string title = (const char *)sqlite3_column_text(stmt, 2);
             int64_t visit_time = sqlite3_column_int64(stmt, 3);
-            result.push_back(HistoryEntry{id, url, title, visit_time});
+            result.push_back(HistoryEntry{id, url, title, Timestamp::FromMilliseconds(visit_time)});
             std::cerr << url << "\n";
         }
         sqlite3_finalize(stmt);

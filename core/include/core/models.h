@@ -3,6 +3,7 @@
 
 #include "Identifier.h"
 #include "Url.h"
+#include "core/Timestamp.h"
 #include <string>
 
 // 
@@ -20,13 +21,15 @@ struct HistoryEntry {
     int64_t id;
     std::string url;
     std::string title;
-    int64_t timestamp;
+    Timestamp visitTime;
 };
 
 struct Bookmark {
     int64_t id;
     std::string url;
     std::string title;
+    int64_t folderId;  // todo
+    Timestamp createdAt;
 };
 
 #endif

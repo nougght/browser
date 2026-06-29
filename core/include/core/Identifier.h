@@ -65,7 +65,7 @@ struct hash<Identifier<Tag>>
     {
         size_t operator()(const Identifier<Tag> &id) const
         {
-            // Просто конвертируем в size_t и используем стандартный хэш
+            // конвертируем в size_t и используем стандартный хэш
             return std::hash<size_t>{}(static_cast<size_t>(id.value));
         }
     };

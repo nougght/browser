@@ -19,6 +19,7 @@ signals:
 private:
     int _rectHMargin;
     int _rectVMargin;
+    int _timeWidth;
 };
 
 #endif // HISTORYDELEGATE_H

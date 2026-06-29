@@ -4,6 +4,8 @@
 #include <QAbstractListModel>
 #include <core/models.h>
 
+enum HistoryRoles {TimeRole = Qt::UserRole + 1,};
+
 class HistoryModel : public QAbstractListModel
 {
     Q_OBJECT
@@ -13,6 +15,7 @@ public:
     {
         return _history.size();
     }
+
 
     QVariant data(const QModelIndex &index, int role = Qt::DisplayRole) const override;
     void addEntry(const HistoryEntry &entry);
